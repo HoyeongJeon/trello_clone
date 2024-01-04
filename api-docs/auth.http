@@ -11,3 +11,12 @@ Content-Type: application/json
     "password":"!Asdf1234",
     "passwordConfirm":"!Asdf1234"
 }
+
+### 로그인
+POST {{host}}/login
+Content-Type: application/json
+
+{
+    "email":"test@test.com",
+    "password":"!Asdf1234",
+}
