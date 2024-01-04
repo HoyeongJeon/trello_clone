@@ -1,0 +1,13 @@
+@host = http://localhost:3000/auth
+
+### 회원가입
+
+POST {{host}}/signup
+Content-Type: application/json
+
+{
+    "email":"test@test.com",
+    "name":"test",
+    "password":"!Asdf1234",
+    "passwordConfirm":"!Asdf1234"
+}
