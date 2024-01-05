@@ -13,6 +13,7 @@ import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Column } from 'typeorm';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
@@ -20,9 +21,13 @@ import { AuthGuard } from '@nestjs/passport';
 export class CardController {
   constructor(private readonly cardService: CardService) {}
 
-  @Post()
-  create(@Body() createCardDto: CreateCardDto) {
-    return this.cardService.create(createCardDto);
+  @Post('/:boardId/:columnId')
+  create(
+    @Param('boardId') boardId: number,
+    @Param('columnId') columnId: number,
+    @Body() createCardDto: CreateCardDto,
+  ) {
+    return this.cardService.create(+boardId, +columnId, createCardDto);
   }
 
   @Get()
@@ -30,9 +35,13 @@ export class CardController {
     return this.cardService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cardService.findOne(+id);
+  @Get('/:boardId/:columnId/:cardId')
+  findOne(
+    @Param('boardId') boardId: string,
+    @Param('columnId') columnId: string,
+    @Param('cardId') cardId: string,
+  ) {
+    return this.cardService.findOne(+boardId, +columnId, +cardId);
   }
 
   @Patch(':id')
