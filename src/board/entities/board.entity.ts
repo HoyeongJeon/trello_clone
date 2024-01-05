@@ -1,7 +1,8 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { ColumnModel } from 'src/column/entities/column.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
 import { UserModel } from 'src/user/entities/user.entity';
-import { Column, Entity, ManyToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
 export enum BoardVisibility {
   PUBLIC = 'public',
@@ -47,4 +48,7 @@ export class BoardModel extends BaseModel {
     onDelete: 'CASCADE',
   })
   users: UserModel[];
+
+  @OneToMany(() => ColumnModel, (column) => column.board)
+  columns: ColumnModel[];
 }
