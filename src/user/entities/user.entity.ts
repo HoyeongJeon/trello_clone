@@ -4,8 +4,9 @@ import {
   IsString,
   IsStrongPassword,
 } from 'class-validator';
+import { BoardModel } from 'src/board/entities/board.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
 
 @Entity({ name: 'users' })
 export class UserModel extends BaseModel {
@@ -56,4 +57,8 @@ export class UserModel extends BaseModel {
     select: false,
   })
   password: string;
+
+  @ManyToMany(() => BoardModel, (board) => board.users)
+  @JoinTable()
+  boards: BoardModel[];
 }
