@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -12,7 +11,7 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from './dtos/sign-up.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { LogInDto } from './dtos/login.dto';
+import { PublicOnlyGuard } from 'src/common/guards/public-only.guard';
 
 @ApiTags('인증')
 @Controller('auth')
@@ -25,6 +24,7 @@ export class AuthController {
    * @returns
    */
 
+  @UseGuards(PublicOnlyGuard)
   @Post('signup')
   async signup(@Body() signUpDto: SignUpDto) {
     const data = await this.authService.signUp(signUpDto);
@@ -42,9 +42,9 @@ export class AuthController {
    * @returns
    */
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard('local'))
+  @UseGuards(PublicOnlyGuard, AuthGuard('local'))
   @Post('login')
-  login(@Request() req, @Body() logInDto: LogInDto) {
+  login(@Request() req) {
     const data = this.authService.logIn(req.user.id);
     return {
       statusCode: HttpStatus.OK,
