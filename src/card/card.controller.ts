@@ -13,7 +13,6 @@ import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { Column } from 'typeorm';
 import { User } from 'src/user/decorators/user.decorator';
 
 @ApiBearerAuth()
@@ -42,13 +41,9 @@ export class CardController {
     return this.cardService.findAll();
   }
 
-  @Get('/:boardId/:columnId/:cardId')
-  findOne(
-    @Param('boardId') boardId: string,
-    @Param('columnId') columnId: string,
-    @Param('cardId') cardId: string,
-  ) {
-    return this.cardService.findOne(+boardId, +columnId, +cardId);
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.cardService.findOne(+id);
   }
 
   @Patch(':id')

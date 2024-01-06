@@ -19,7 +19,7 @@ export class CardService {
     createCardDto: CreateCardDto,
   ) {
     const maxOrder = await this.cardRepository.findOne({
-      where: {},
+      where: { columnId },
       order: { order: 'DESC' },
     });
 
@@ -31,35 +31,22 @@ export class CardService {
         title: createCardDto.title,
         order: 1,
       });
-      return {
-        statusCode: 201,
-        message: '카드 생성 성공하셨습니다.',
-        data: { result },
-      };
+      return result;
     }
 
     const result = await this.cardRepository.save({
-      boardId,
-      columnId,
       title: createCardDto.title,
       order: maxOrder.order + 1,
     });
-    return {
-      statusCode: 201,
-      message: '카드 생성 성공하셨습니다.',
-      data: { result },
-    };
+    return result;
   }
 
-  async findAll() {
-    return await this.cardRepository.find();
+  findAll() {
+    return `This action returns all card`;
   }
 
-  async findOne(boardId: number, columnId: number, cardId: number) {
-    const findCard = await this.cardRepository.findOne({
-      where: { id: cardId, columnId },
-    });
-    return findCard;
+  findOne(id: number) {
+    return `This action returns a #${id} card`;
   }
 
   update(id: number, updateCardDto: UpdateCardDto) {
