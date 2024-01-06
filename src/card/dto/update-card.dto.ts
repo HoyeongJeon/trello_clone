@@ -1,4 +1,9 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateCardDto } from './create-card.dto';
+import { CardModel } from '../entities/card.entity';
 
-export class UpdateCardDto extends PartialType(CreateCardDto) {}
+export class UpdateCardDto extends PartialType(CardModel) {
+  title?: string;
+  members?: string;
+  description?: string;
+  color?: string;
+}

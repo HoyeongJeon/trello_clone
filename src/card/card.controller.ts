@@ -3,17 +3,16 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { CardService } from './card.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from 'src/user/decorators/user.decorator';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
@@ -26,14 +25,8 @@ export class CardController {
     @Param('boardId') boardId: number,
     @Param('columnId') columnId: number,
     @Body() createCardDto: CreateCardDto,
-    @User() users,
   ) {
-    return this.cardService.create(
-      +boardId,
-      +columnId,
-      users.id,
-      createCardDto,
-    );
+    return this.cardService.create(+boardId, +columnId, createCardDto);
   }
 
   @Get()
@@ -41,18 +34,31 @@ export class CardController {
     return this.cardService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cardService.findOne(+id);
+  @Get('/:boardId/:columnId/:cardId')
+  findOne(
+    @Param('boardId') boardId: string,
+    @Param('columnId') columnId: string,
+    @Param('cardId') cardId: string,
+  ) {
+    return this.cardService.findOne(+boardId, +columnId, +cardId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCardDto: UpdateCardDto) {
-    return this.cardService.update(+id, updateCardDto);
+  @Put('/:boardId/:columnId/:cardId')
+  update(
+    @Param('boardId') boardId: string,
+    @Param('columnId') columnId: string,
+    @Param('cardId') cardId: string,
+    @Body() updateCardDto: UpdateCardDto,
+  ) {
+    return this.cardService.update(+boardId, +columnId, +cardId, updateCardDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cardService.remove(+id);
+  @Delete('/:boardId/:columnId/:cardId')
+  remove(
+    @Param('boardId') boardId: string,
+    @Param('columnId') columnId: string,
+    @Param('cardId') cardId: string,
+  ) {
+    return this.cardService.remove(+boardId, +columnId, +cardId);
   }
 }

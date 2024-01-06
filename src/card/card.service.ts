@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,7 +15,6 @@ export class CardService {
   async create(
     boardId: number,
     columnId: number,
-    userId: number,
     createCardDto: CreateCardDto,
   ) {
     const maxOrder = await this.cardRepository.findOne({
@@ -27,33 +26,74 @@ export class CardService {
       const result = await this.cardRepository.save({
         boardId,
         columnId,
-        userId,
         title: createCardDto.title,
         order: 1,
       });
-      return result;
+      return {
+        statusCode: 201,
+        message: '카드 생성 성공하셨습니다.',
+        data: { result },
+      };
     }
 
     const result = await this.cardRepository.save({
+      boardId,
+      columnId,
       title: createCardDto.title,
       order: maxOrder.order + 1,
     });
-    return result;
+    return {
+      statusCode: 201,
+      message: '카드 생성 성공하셨습니다.',
+      data: { result },
+    };
   }
 
-  findAll() {
-    return `This action returns all card`;
+  async findAll() {
+    return await this.cardRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} card`;
+  async findOne(boardId: number, columnId: number, cardId: number) {
+    const findCard = await this.findById(columnId, cardId);
+    return findCard;
   }
 
-  update(id: number, updateCardDto: UpdateCardDto) {
-    return `This action updates a #${id} card`;
+  async update(
+    boardId: number,
+    columnId: number,
+    cardId: number,
+    updateCardDto: UpdateCardDto,
+  ) {
+    const { title, members, description, color } = updateCardDto;
+
+    const findCard = await this.findById(columnId, cardId);
+
+    if (_.isNil(findCard)) {
+      throw new NotFoundException('존재하지 않는 카드입니다');
+    }
+
+    const updateCard = await this.cardRepository.update(
+      { id: findCard.id },
+      { title, members, description, color },
+    );
+
+    return updateCard;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} card`;
+  async remove(boardId: number, columnId: number, cardId: number) {
+    const findCard = await this.findById(columnId, cardId);
+
+    if (_.isNil(findCard)) {
+      throw new NotFoundException('존재하지 않는 카드입니다');
+    }
+
+    await this.cardRepository.delete({ id: findCard.id });
+    return { message: '카드 삭제 성공하셨습니다' };
+  }
+
+  async findById(columnId: number, cardId: number) {
+    return await this.cardRepository.findOne({
+      where: { id: cardId, columnId },
+    });
   }
 }
