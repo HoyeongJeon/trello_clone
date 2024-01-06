@@ -11,8 +11,14 @@ export class UserService {
     private readonly userRepository: Repository<UserModel>,
   ) {}
   async findById(id: number) {
-    const user = await this.userRepository.findOneBy({ id });
-
+    const user = await this.userRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        boards: true,
+      },
+    });
     if (!user) {
       throw new NotFoundException('해당하는 유저가 없습니다.');
     }

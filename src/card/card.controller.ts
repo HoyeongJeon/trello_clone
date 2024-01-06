@@ -14,6 +14,7 @@ import { UpdateCardDto } from './dto/update-card.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Column } from 'typeorm';
+import { User } from 'src/user/decorators/user.decorator';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
@@ -26,8 +27,14 @@ export class CardController {
     @Param('boardId') boardId: number,
     @Param('columnId') columnId: number,
     @Body() createCardDto: CreateCardDto,
+    @User() users,
   ) {
-    return this.cardService.create(+boardId, +columnId, createCardDto);
+    return this.cardService.create(
+      +boardId,
+      +columnId,
+      users.id,
+      createCardDto,
+    );
   }
 
   @Get()

@@ -15,6 +15,7 @@ export class CardService {
   async create(
     boardId: number,
     columnId: number,
+    userId: number,
     createCardDto: CreateCardDto,
   ) {
     const maxOrder = await this.cardRepository.findOne({
@@ -26,6 +27,7 @@ export class CardService {
       const result = await this.cardRepository.save({
         boardId,
         columnId,
+        userId,
         title: createCardDto.title,
         order: 1,
       });

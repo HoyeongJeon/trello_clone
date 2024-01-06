@@ -9,6 +9,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { CommonModule } from './common/common.module';
 import { CardModule } from './card/card.module';
+import { BoardModule } from './board/board.module';
+import { ColumnModule } from './column/column.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { CardModule } from './card/card.module';
     UserModule,
     CommonModule,
     CardModule,
+    BoardModule,
+    ColumnModule,
   ],
   controllers: [AppController],
   providers: [AppService],
