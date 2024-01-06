@@ -8,8 +8,8 @@ Content-Type: application/json
 {
     "email":"test@test.com",
     "name":"test",
-    "password":"!Asdf1234",
-    "passwordConfirm":"!Asdf1234"
+    "password":"123456aA!",
+    "passwordConfirm":"123456aA!"
 }
 
 ### 로그인
@@ -17,6 +17,6 @@ POST {{host}}/login
 Content-Type: application/json
 
 {
-    "email":"test@test.com",
-    "password":"!Asdf1234",
+    "email":"123456aA!",
+    "password":"123456aA!",
 }
