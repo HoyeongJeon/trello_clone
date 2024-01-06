@@ -2,7 +2,15 @@ import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { ColumnModel } from 'src/column/entities/column.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
 import { UserModel } from 'src/user/entities/user.entity';
-import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
+import { OwnershipModel } from './ownership.entity';
 
 export enum BoardVisibility {
   PUBLIC = 'public',
@@ -51,4 +59,8 @@ export class BoardModel extends BaseModel {
 
   @OneToMany(() => ColumnModel, (column) => column.board)
   columns: ColumnModel[];
+
+  @ManyToOne(() => OwnershipModel, (ownership) => ownership.boards)
+  @JoinColumn()
+  ownership: OwnershipModel;
 }

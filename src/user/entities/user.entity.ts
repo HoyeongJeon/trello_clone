@@ -5,8 +5,16 @@ import {
   IsStrongPassword,
 } from 'class-validator';
 import { BoardModel } from 'src/board/entities/board.entity';
+import { OwnershipModel } from 'src/board/entities/ownership.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+} from 'typeorm';
 
 @Entity({ name: 'users' })
 export class UserModel extends BaseModel {
@@ -61,4 +69,8 @@ export class UserModel extends BaseModel {
   @ManyToMany(() => BoardModel, (board) => board.users)
   @JoinTable()
   boards: BoardModel[];
+
+  @ManyToOne(() => OwnershipModel, (ownership) => ownership.users)
+  @JoinColumn()
+  ownership: OwnershipModel;
 }
