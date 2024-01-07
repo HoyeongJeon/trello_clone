@@ -1,0 +1,16 @@
+@host = http://localhost:3000/
+
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzA0NTkyNTU3LCJleHAiOjE3MDQ2Nzg5NTd9.HPL_i_DIsBE9aInnIFh838nYMVS08YwbFG6NATuhURk
+
+### 컬럼생성
+POST {{host}}/:boardId/column
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+{
+     "title": "처음 만드는 컬럼"
+}
+
+### 컬럼 수정
+
+
+### 컬럼 삭제
