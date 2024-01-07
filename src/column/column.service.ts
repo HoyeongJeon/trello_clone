@@ -15,7 +15,7 @@ export class ColumnService {
 
   async getAllColumns(boardId: number): Promise<ColumnModel[]> {
     return this.columnRepository.find({
-      where: { boardId },
+      where: { boardId: boardId },
       order: { order: 'ASC' },
     });
   }
