@@ -1,4 +1,6 @@
+import { IsString } from 'class-validator';
+
 export class UpdateColumnDto {
-  title?: string;
-  order?: number;
+  @IsString()
+  title: string;
 }

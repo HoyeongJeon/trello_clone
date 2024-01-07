@@ -6,7 +6,7 @@ POST {{host}}/signup
 Content-Type: application/json
 
 {
-    "email":"test@test.com",
+    "email":"test1@test.com",
     "name":"test",
     "password":"123456aA!",
     "passwordConfirm":"123456aA!"
@@ -15,8 +15,7 @@ Content-Type: application/json
 ### 로그인
 POST {{host}}/login
 Content-Type: application/json
-
 {
-    "email":"123456aA!",
-    "password":"123456aA!",
+    "email":"test1@test.com",
+    "password":"123456aA!"
 }

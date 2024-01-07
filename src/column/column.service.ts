@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { ColumnModel } from './entities/column.entity';
 import { CreateColumnDto } from './dtos/create-column.dto';
 import { UpdateColumnDto } from './dtos/update-column.dto';
+import { UpdateOrderDto } from './dtos/order-column.dto';
 
 @Injectable()
 export class ColumnService {
@@ -11,6 +12,13 @@ export class ColumnService {
     @InjectRepository(ColumnModel)
     private columnRepository: Repository<ColumnModel>,
   ) {}
+
+  async getAllColumns(boardId: number): Promise<ColumnModel[]> {
+    return this.columnRepository.find({
+      where: { boardId },
+      order: { order: 'ASC' },
+    });
+  }
 
   async createColumn(
     boardId: number,
@@ -41,5 +49,36 @@ export class ColumnService {
 
   async deleteColumn(id: number): Promise<void> {
     await this.columnRepository.delete(id);
+  }
+
+  async updateColumnOrderByOrder(
+    boardId: number,
+    order: number,
+    updateOrderDto: UpdateOrderDto,
+  ): Promise<ColumnModel> {
+    const column = await this.columnRepository.findOne({
+      where: { boardId, order },
+    });
+
+    if (!column) {
+      throw new Error('존재하지 않는 컬럼입니다.');
+    }
+
+    const targetOrder =
+      updateOrderDto.direction === 'up' ? order - 1 : order + 1;
+
+    const targetColumn = await this.columnRepository.findOne({
+      where: { boardId, order: targetOrder },
+    });
+
+    if (targetColumn) {
+      // 순서바꾸기
+      await this.columnRepository.save([
+        { ...column, order: targetOrder },
+        { ...targetColumn, order: order },
+      ]);
+    }
+
+    return this.columnRepository.findOne({ where: { boardId, order } });
   }
 }
