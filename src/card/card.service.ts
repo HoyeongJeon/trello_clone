@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
+import { MoveCardDto } from './dto/move-card.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Not } from 'typeorm';
 import { CardModel } from './entities/card.entity';
 import { Repository } from 'typeorm';
 import _ from 'lodash';
@@ -95,5 +97,43 @@ export class CardService {
     return await this.cardRepository.findOne({
       where: { id: cardId, columnId },
     });
+  }
+
+  //카드 이동하기
+  async move(
+    boardId: number,
+    columnId: number,
+    cardId: number,
+    moveCardDto: MoveCardDto,
+  ) {
+    const { order: newOrder } = moveCardDto;
+
+    const findCard = await this.findById(columnId, cardId);
+
+    if (_.isNil(findCard)) {
+      throw new NotFoundException('존재하지 않는 카드입니다');
+    }
+
+    const currentOrder = findCard.order;
+    await this.cardRepository.update({ id: findCard.id }, { order: newOrder });
+
+    const otherCard = await this.cardRepository.findOne({
+      where: {
+        columnId,
+        order: newOrder,
+        id: Not(findCard.id),
+      },
+    });
+
+    if (!otherCard) {
+      throw new NotFoundException(
+        '존재하지 않는 순서이거나 현재 순서와 같습니다.',
+      );
+    }
+    await this.cardRepository.update(
+      { id: otherCard.id },
+      { order: currentOrder },
+    );
+    return { message: '카드 이동 완료.' };
   }
 }

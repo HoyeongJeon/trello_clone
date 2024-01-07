@@ -7,10 +7,12 @@ import {
   Delete,
   UseGuards,
   Put,
+  Patch,
 } from '@nestjs/common';
 import { CardService } from './card.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
+import { MoveCardDto } from './dto/move-card.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -60,5 +62,16 @@ export class CardController {
     @Param('cardId') cardId: string,
   ) {
     return this.cardService.remove(+boardId, +columnId, +cardId);
+  }
+
+  //카드이동
+  @Patch('/:boardId/:columnId/:cardId')
+  move(
+    @Param('boardId') boardId: string,
+    @Param('columnId') columnId: string,
+    @Param('cardId') cardId: string,
+    @Body() moveCardDto: MoveCardDto,
+  ) {
+    return this.cardService.move(+boardId, +columnId, +cardId, moveCardDto);
   }
 }
