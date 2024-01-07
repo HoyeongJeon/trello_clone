@@ -47,15 +47,19 @@ export class ColumnService {
     return this.columnRepository.findOne({ where: { id } });
   }
 
-  async deleteColumn(id: number): Promise<void> {
-    await this.columnRepository.delete(id);
+  async deleteColumn(id: number): Promise<{ message: string }> {
+    const deletedOne = await this.columnRepository.delete(id);
+    if (deletedOne.affected === 0) {
+      throw new Error('이미 삭제된 컬럼입니다.');
+    }
+    return { message: '해당 컬럼을 삭제하였습니다' };
   }
 
   async updateColumnOrderByOrder(
     boardId: number,
     order: number,
     updateOrderDto: UpdateOrderDto,
-  ): Promise<ColumnModel> {
+  ): Promise<{ column: ColumnModel; message: string }> {
     const column = await this.columnRepository.findOne({
       where: { boardId, order },
     });
@@ -79,6 +83,9 @@ export class ColumnService {
       ]);
     }
 
-    return this.columnRepository.findOne({ where: { boardId, order } });
+    const updatedColumn = await this.columnRepository.findOne({
+      where: { id: column.id },
+    });
+    return { column: updatedColumn, message: '순서가 바뀌었습니다' };
   }
 }
