@@ -8,8 +8,8 @@ Content-Type: application/json
 {
     "email":"test1@test.com",
     "name":"test",
-    "password":"123456aA!",
-    "passwordConfirm":"123456aA!"
+    "password":"!Asdf1234",
+    "passwordConfirm":"!Asdf1234"
 }
 
 ### 로그인
