@@ -38,13 +38,6 @@ export class BoardService {
       users: [user],
     });
 
-    // 트랜잭션 확인하기 save 시 자동으로 commit 됨
-    // 에러 시 이 부분도 돌릴 수 없는가?
-    // await this.ownershipRepository.save({
-    //   level: OwnershipType.OWNER,
-    //   boards: board,
-    //   users: user,
-    // });
     return board;
   }
 
@@ -54,7 +47,12 @@ export class BoardService {
       : this.ownershipRepository;
   }
 
-  async saveOwnership(board: BoardModel, userId: number, qr: QueryRunner) {
+  async saveOwnership(
+    board: BoardModel,
+    userId: number,
+    level: OwnershipType,
+    qr: QueryRunner,
+  ) {
     // 트랜잭션 확인하기 save 시 자동으로 commit 됨
     // 에러 시 이 부분도 돌릴 수 없는가?
     const repository = this.getOwnerRepository(qr);
@@ -66,7 +64,7 @@ export class BoardService {
     });
 
     await repository.save({
-      level: OwnershipType.OWNER,
+      level,
       boards: board,
       users: user,
     });
@@ -106,16 +104,17 @@ export class BoardService {
     return board;
   }
 
-  async inviteUser(board: BoardModel, user: UserModel) {
-    const data = await this.boardRepository.save({
+  async inviteUser(board: BoardModel, user: UserModel, qr: QueryRunner) {
+    const repository = this.getRepository(qr);
+    const data = await repository.save({
       ...board,
       users: [...board.users, user],
     });
-    await this.ownershipRepository.save({
-      level: OwnershipType.MEMBER,
-      boards: board,
-      users: user,
-    });
+    // await this.ownershipRepository.save({
+    //   level: OwnershipType.MEMBER,
+    //   boards: board,
+    //   users: user,
+    // });
 
     return data;
   }
