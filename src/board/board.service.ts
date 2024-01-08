@@ -1,10 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { BoardModel, BoardVisibility } from './entities/board.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBoardDto } from './dtos/create-board.dto';
 import { UserModel } from 'src/user/entities/user.entity';
 import { OwnershipModel, OwnershipType } from './entities/ownership.entity';
+import { ColumnService } from 'src/column/column.service';
 
 @Injectable()
 export class BoardService {
@@ -15,7 +16,7 @@ export class BoardService {
     private readonly userRepository: Repository<UserModel>,
     @InjectRepository(OwnershipModel)
     private readonly ownershipRepository: Repository<OwnershipModel>,
-    private readonly dataSource: DataSource,
+    private readonly columnService: ColumnService,
   ) {}
 
   getRepository(qr?: QueryRunner) {
@@ -94,12 +95,15 @@ export class BoardService {
         id: boardId,
       },
     });
-
     if (!board) {
       throw new UnauthorizedException('해당 보드가 없습니다.');
     }
 
-    return board;
+    const columns = await this.columnService.getAllColumns(boardId);
+    return {
+      ...board,
+      columns,
+    };
   }
 
   async inviteUser(board: BoardModel, user: UserModel, qr: QueryRunner) {
@@ -108,11 +112,6 @@ export class BoardService {
       ...board,
       users: [...board.users, user],
     });
-    // await this.ownershipRepository.save({
-    //   level: OwnershipType.MEMBER,
-    //   boards: board,
-    //   users: user,
-    // });
 
     return data;
   }
