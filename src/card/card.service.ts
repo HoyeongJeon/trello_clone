@@ -93,12 +93,21 @@ export class CardService {
 
     // 멤버가 아니면 권한이 없다고 할 예정
 
-    const updateCard = await this.cardRepository.update(
+    await this.cardRepository.update(
       { id: findCard.id },
-      { title, members, description, color, startDate, dueDate },
+      {
+        title,
+        members,
+        description,
+        color,
+        startDate: new Date(startDate as any),
+        dueDate: new Date(dueDate as any),
+      },
     );
 
-    return updateCard;
+    return await this.cardRepository.findOne({
+      where: { id: findCard.id },
+    });
   }
 
   async remove(boardId: number, columnId: number, cardId: number) {
