@@ -2,14 +2,7 @@ import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { ColumnModel } from 'src/column/entities/column.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
 import { UserModel } from 'src/user/entities/user.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 import { OwnershipModel } from './ownership.entity';
 
 export enum BoardVisibility {
@@ -19,23 +12,39 @@ export enum BoardVisibility {
 
 @Entity({ name: 'boards' })
 export class BoardModel extends BaseModel {
+  /**
+   * 제목
+   * @example '보드 제목'
+   */
   @IsString()
   @IsNotEmpty()
   @Column()
   title: string;
 
+  /**
+   * 배경색
+   * @example '#ffffff'
+   */
   @IsString()
   @Column({
     default: '#ffffff',
   })
   background?: string;
 
+  /**
+   * 설명
+   * @example '보드 설명'
+   */
   @IsString()
   @Column({
     nullable: true,
   })
   description?: string;
 
+  /**
+   * 소유자
+   * @example 1
+   */
   @IsNumber()
   @IsNotEmpty()
   @Column()
@@ -60,7 +69,6 @@ export class BoardModel extends BaseModel {
   @OneToMany(() => ColumnModel, (column) => column.board)
   columns: ColumnModel[];
 
-  @ManyToOne(() => OwnershipModel, (ownership) => ownership.boards)
-  @JoinColumn()
-  ownership: OwnershipModel;
+  @OneToMany(() => OwnershipModel, (ownership) => ownership.boards)
+  public ownership: OwnershipModel[];
 }
