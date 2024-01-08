@@ -57,7 +57,16 @@ export class CardService {
   }
 
   async findAll(boardId: number) {
-    return await this.columnRepository.find({ where: { boardId } });
+    const board = await this.columnRepository.find({
+      where: { boardId },
+    });
+
+    console.log(board);
+    // const card = await this.cardRepository.find({
+    //   where: { id: board },
+    // });
+
+    return;
   }
 
   async findOne(boardId: number, columnId: number, cardId: number) {
