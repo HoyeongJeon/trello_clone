@@ -7,14 +7,7 @@ import {
 import { BoardModel } from 'src/board/entities/board.entity';
 import { OwnershipModel } from 'src/board/entities/ownership.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-} from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
 
 @Entity({ name: 'users' })
 export class UserModel extends BaseModel {
@@ -70,7 +63,6 @@ export class UserModel extends BaseModel {
   @JoinTable()
   boards: BoardModel[];
 
-  @ManyToOne(() => OwnershipModel, (ownership) => ownership.users)
-  @JoinColumn()
-  ownership: OwnershipModel;
+  @OneToMany(() => OwnershipModel, (ownership) => ownership.users)
+  public ownership: OwnershipModel[];
 }
