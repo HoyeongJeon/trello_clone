@@ -22,20 +22,23 @@ import { AuthGuard } from '@nestjs/passport';
 export class CardController {
   constructor(private readonly cardService: CardService) {}
 
+  // 카드 생성
   @Post('/:boardId/:columnId')
   create(
-    @Param('boardId') boardId: number,
-    @Param('columnId') columnId: number,
+    @Param('boardId') boardId: string,
+    @Param('columnId') columnId: string,
     @Body() createCardDto: CreateCardDto,
   ) {
     return this.cardService.create(+boardId, +columnId, createCardDto);
   }
 
+  //카드 조회
   @Get()
   findAll() {
     return this.cardService.findAll();
   }
 
+  //카드 상세 조회
   @Get('/:boardId/:columnId/:cardId')
   findOne(
     @Param('boardId') boardId: string,
@@ -45,6 +48,8 @@ export class CardController {
     return this.cardService.findOne(+boardId, +columnId, +cardId);
   }
 
+  //카드수정
+  //title?, members?, description?, color?
   @Put('/:boardId/:columnId/:cardId')
   update(
     @Param('boardId') boardId: string,
@@ -55,6 +60,7 @@ export class CardController {
     return this.cardService.update(+boardId, +columnId, +cardId, updateCardDto);
   }
 
+  //카드삭제
   @Delete('/:boardId/:columnId/:cardId')
   remove(
     @Param('boardId') boardId: string,
