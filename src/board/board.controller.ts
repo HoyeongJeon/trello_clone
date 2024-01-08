@@ -12,12 +12,13 @@ import {
 } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { CreateBoardDto } from './dtos/create-board.dto';
 import { User } from 'src/user/decorators/user.decorator';
 import { UserService } from 'src/user/user.service';
 import { OwnershipType } from './entities/ownership.entity';
 import { DataSource } from 'typeorm/data-source/DataSource';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ColumnService } from 'src/column/column.service';
 
 @ApiTags('보드')
 @Controller('board')
@@ -25,6 +26,7 @@ export class BoardController {
   constructor(
     private readonly boardService: BoardService,
     private readonly userService: UserService,
+    private readonly columnService: ColumnService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -48,7 +50,7 @@ export class BoardController {
    * @returns
    */
   @Get('my-boards')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async findMyBoards(@User() user) {
     // 내가 속해있는 보드 찾기
     const data = await this.boardService.findMyBoards(user.id);
@@ -65,7 +67,7 @@ export class BoardController {
    * @returns
    */
   @Get(':boardId')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async findBoardById(@Param('boardId') boardId: number, @User() user) {
     const data = await this.boardService.findBoardById(boardId);
     const existingUser = await this.boardService.findUserOwnership(
@@ -89,7 +91,7 @@ export class BoardController {
    */
   @ApiBearerAuth()
   @Post('/')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async createBoard(@Body() createBoardDto: CreateBoardDto, @User() user) {
     const qr = this.dataSource.createQueryRunner();
     await qr.connect();
@@ -100,6 +102,8 @@ export class BoardController {
         user.id,
         qr,
       );
+
+      await this.columnService.createDefaultColumns(board.id, qr);
       await this.boardService.saveOwnership(
         board,
         user.id,
@@ -113,7 +117,8 @@ export class BoardController {
     } finally {
       await qr.release();
     }
-
+    // const board = await this.boardService.findBoardById(createBoardDto.id);
+    // await this.columnService.createDefaultColumns(board.id);
     return {
       statusCode: HttpStatus.OK,
       message: '보드 생성에 성공했습니다.',
@@ -129,7 +134,7 @@ export class BoardController {
    */
   @ApiBearerAuth()
   @Post(':boardId/invite')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async inviteUser(
     @Param('boardId') boardId: number,
     @User() user,
@@ -188,7 +193,7 @@ export class BoardController {
    * @returns
    */
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Patch(':boardId')
   async patchBoard(
     @Body() createBoardDto: CreateBoardDto,
@@ -208,7 +213,7 @@ export class BoardController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Delete(':boardId')
   async deleteBoard(@User() user, @Param('boardId') boardId: number) {
     await this.boardService.deleteBoard(user.id, boardId);

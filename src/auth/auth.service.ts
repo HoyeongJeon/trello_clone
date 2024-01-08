@@ -52,7 +52,10 @@ export class AuthService {
   logIn(userId: number) {
     // JWT 토큰 생성
     const payload = { id: userId };
-    const accessToken = this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_SECRET'),
+      expiresIn: this.configService.get<string>('JWT_EXPIRATION_TIME'),
+    });
     return { accessToken };
   }
 

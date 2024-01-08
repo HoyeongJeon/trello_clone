@@ -12,6 +12,7 @@ import { UserService } from './user.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiTags('유저')
 @Controller('user')
@@ -24,7 +25,7 @@ export class UserController {
    * @returns
    */
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   async myProfile(@Request() req) {
     const userId = req.user.id;
