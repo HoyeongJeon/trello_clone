@@ -28,7 +28,7 @@ export class CardModel extends BaseModel {
   order: number;
 
   @IsDate()
-  @Column()
+  @Column({ default: () => 'CURRENT_TIMESTAMP', nullable: false })
   startDate?: Date;
 
   @IsDate()

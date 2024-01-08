@@ -5,4 +5,5 @@ import { IsNotEmpty } from 'class-validator';
 export class CreateCardDto extends PartialType(CardModel) {
   @IsNotEmpty({ message: '제목을 입력해주세요' })
   title: string;
+  startDate?: Date;
 }

@@ -29,6 +29,7 @@ export class CardService {
         boardId,
         columnId,
         title: createCardDto.title,
+        startDate: createCardDto.startDate,
         order: 1,
       });
       return {
@@ -66,7 +67,8 @@ export class CardService {
     cardId: number,
     updateCardDto: UpdateCardDto,
   ) {
-    const { title, members, description, color } = updateCardDto;
+    const { title, members, description, color, startDate, dueDate } =
+      updateCardDto;
 
     const findCard = await this.findById(columnId, cardId);
 
@@ -76,7 +78,7 @@ export class CardService {
 
     const updateCard = await this.cardRepository.update(
       { id: findCard.id },
-      { title, members, description, color },
+      { title, members, description, color, startDate, dueDate },
     );
 
     return updateCard;
