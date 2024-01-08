@@ -6,11 +6,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModel } from 'src/user/entities/user.entity';
 import { OwnershipModel } from './entities/ownership.entity';
 import { UserModule } from 'src/user/user.module';
+import { ColumnModule } from 'src/column/column.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([BoardModel, UserModel, OwnershipModel]),
     UserModule,
+    ColumnModule,
   ],
   controllers: [BoardController],
   providers: [BoardService],

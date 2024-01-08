@@ -36,6 +36,7 @@ export class ColumnService {
       boardId,
       order,
     });
+
     return this.columnRepository.save(newColumn);
   }
 
