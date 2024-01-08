@@ -8,7 +8,7 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 })
 export class CardModel extends BaseModel {
   @IsString()
-  @Column()
+  @Column({ nullable: true })
   members: string;
 
   @IsString()
@@ -16,11 +16,11 @@ export class CardModel extends BaseModel {
   title: string;
 
   @IsString()
-  @Column()
+  @Column({ nullable: true })
   description: string;
 
   @IsString()
-  @Column()
+  @Column({ nullable: true })
   color: string;
 
   @IsNumber()
