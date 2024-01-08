@@ -1,6 +1,6 @@
 import { IsEnum } from 'class-validator';
 import { BaseModel } from 'src/common/entities/base.entity';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { BoardModel } from './board.entity';
 import { UserModel } from 'src/user/entities/user.entity';
 
@@ -20,9 +20,13 @@ export class OwnershipModel extends BaseModel {
   })
   level: OwnershipType;
 
-  @OneToMany(() => BoardModel, (board) => board.ownership)
-  boards: BoardModel[];
+  @ManyToOne(() => BoardModel, (board) => board.ownership, {
+    eager: true,
+  })
+  boards: BoardModel;
 
-  @OneToMany(() => UserModel, (user) => user.ownership)
-  users: UserModel[];
+  @ManyToOne(() => UserModel, (user) => user.ownership, {
+    eager: true,
+  })
+  users: UserModel;
 }

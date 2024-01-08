@@ -8,6 +8,7 @@ import { BoardModel } from 'src/board/entities/board.entity';
 import { OwnershipModel } from 'src/board/entities/ownership.entity';
 
 @Module({
+  exports: [UserService],
   imports: [
     TypeOrmModule.forFeature([UserModel, BoardModel, OwnershipModel]),
     AuthModule,
