@@ -7,11 +7,15 @@ import { Not } from 'typeorm';
 import { CardModel } from './entities/card.entity';
 import { Repository } from 'typeorm';
 import _ from 'lodash';
+import { ColumnModel } from 'src/column/entities/column.entity';
 
 @Injectable()
 export class CardService {
   constructor(
-    @InjectRepository(CardModel) private cardRepository: Repository<CardModel>,
+    @InjectRepository(CardModel)
+    private readonly cardRepository: Repository<CardModel>,
+    @InjectRepository(ColumnModel)
+    private readonly columnRepository: Repository<ColumnModel>,
   ) {}
 
   async create(
@@ -52,8 +56,8 @@ export class CardService {
     };
   }
 
-  async findAll() {
-    return await this.cardRepository.find();
+  async findAll(boardId: number) {
+    return await this.columnRepository.find({ where: { boardId } });
   }
 
   async findOne(boardId: number, columnId: number, cardId: number) {
@@ -75,6 +79,8 @@ export class CardService {
     if (_.isNil(findCard)) {
       throw new NotFoundException('존재하지 않는 카드입니다');
     }
+
+    // 멤버가 아니면 권한이 없다고 할 예정
 
     const updateCard = await this.cardRepository.update(
       { id: findCard.id },

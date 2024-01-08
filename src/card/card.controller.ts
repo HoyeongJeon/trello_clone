@@ -33,9 +33,9 @@ export class CardController {
   }
 
   //카드 조회
-  @Get()
-  findAll() {
-    return this.cardService.findAll();
+  @Get('/:boardId')
+  findAll(@Param('boardId') boardId: string) {
+    return this.cardService.findAll(+boardId);
   }
 
   //카드 상세 조회
