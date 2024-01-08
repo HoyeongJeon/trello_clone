@@ -45,7 +45,12 @@ export class BoardController {
         user.id,
         qr,
       );
-      await this.boardService.saveOwnership(board, user.id, qr);
+      await this.boardService.saveOwnership(
+        board,
+        user.id,
+        OwnershipType.OWNER,
+        qr,
+      );
       await qr.commitTransaction();
     } catch (error) {
       await qr.rollbackTransaction();
@@ -115,7 +120,14 @@ export class BoardController {
         throw new UnauthorizedException('이미 보드에 속해있는 유저입니다.');
       }
       // 보드에 유저를 추가한다.
-      const data = await this.boardService.inviteUser(board, invitedUser);
+      await this.boardService.inviteUser(board, invitedUser, qr);
+      await this.boardService.saveOwnership(
+        board,
+        invitedUser.id,
+        OwnershipType.MEMBER,
+        qr,
+      );
+      await qr.commitTransaction();
     } catch (error) {
       await qr.rollbackTransaction();
       throw error;
