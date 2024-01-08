@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpStatus,
   Param,
   Patch,
@@ -26,6 +27,60 @@ export class BoardController {
     private readonly userService: UserService,
     private readonly dataSource: DataSource,
   ) {}
+
+  /**
+   *  보드 조회
+   * @returns
+   */
+  @Get()
+  async findPublicBoards() {
+    const data = await this.boardService.findPublicBoards();
+    return {
+      statusCode: HttpStatus.OK,
+      message: '보드 조회에 성공했습니다.',
+      data,
+    };
+  }
+
+  /**
+   * 내가 속해있는 보드 조회
+   * @param user
+   * @returns
+   */
+  @Get('my-boards')
+  @UseGuards(AuthGuard('jwt'))
+  async findMyBoards(@User() user) {
+    // 내가 속해있는 보드 찾기
+    const data = await this.boardService.findMyBoards(user.id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: '보드 조회에 성공했습니다.',
+      data,
+    };
+  }
+
+  /**
+   * 보드 상세 조회
+   * @param boardId
+   * @returns
+   */
+  @Get(':boardId')
+  @UseGuards(AuthGuard('jwt'))
+  async findBoardById(@Param('boardId') boardId: number, @User() user) {
+    const data = await this.boardService.findBoardById(boardId);
+    const existingUser = await this.boardService.findUserOwnership(
+      data,
+      user.id,
+    );
+    if (!existingUser) {
+      throw new UnauthorizedException('보드에 속해있지 않습니다.');
+    }
+    return {
+      statusCode: HttpStatus.OK,
+      message: '보드 조회에 성공했습니다.',
+      data,
+    };
+  }
 
   /**
    * 보드 생성
@@ -67,6 +122,9 @@ export class BoardController {
 
   /**
    * 보드 초대
+   * @param boardId
+   * @param user
+   * @param targetEmail
    * @returns
    */
   @ApiBearerAuth()
@@ -77,22 +135,6 @@ export class BoardController {
     @User() user,
     @Body('targetEmail') targetEmail: string,
   ) {
-    /**
-     * 초대 하려면 무엇이 필요한가?
-     * 1. 보드 아이디
-     * 2. 초대할 유저 이메일
-     * 3. 로그인 한 유저가 보드에 속해있는지 확인한다.
-     * 4. 보드에 속해있지 않으면 에러를 던진다.
-     * 5. 유저의 권한이 OWNER 또는 ADMIN이 아니면 에러를 던진다.
-     * 6. 보드 아이디로 보드를 찾는다.
-     * 7. 유저 이메일로 유저를 찾는다.
-     * 8. 보드에 유저가 있는지 확인한다.
-     * 9. 보드에 유저가 있으면 에러를 던진다.
-  ManyToOne,
-     * 10. 보드에 유저를 추가한다.
-     * 11. 보드에 유저를 추가하면서 권한을 부여한다.
-     * 12. 권한은 일단 MEMBER로 부여한다. ***
-     */
     const qr = this.dataSource.createQueryRunner();
     await qr.connect();
     await qr.startTransaction();
