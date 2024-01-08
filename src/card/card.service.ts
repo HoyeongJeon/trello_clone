@@ -30,7 +30,6 @@ export class CardService {
 
     if (_.isNil(maxOrder)) {
       const result = await this.cardRepository.save({
-        boardId,
         columnId,
         title: createCardDto.title,
         startDate: createCardDto.startDate,
@@ -44,7 +43,6 @@ export class CardService {
     }
 
     const result = await this.cardRepository.save({
-      boardId,
       columnId,
       title: createCardDto.title,
       order: maxOrder.order + 1,
@@ -57,16 +55,20 @@ export class CardService {
   }
 
   async findAll(boardId: number) {
-    const board = await this.columnRepository.find({
+    const columns = await this.columnRepository.find({
       where: { boardId },
     });
 
-    console.log(board);
-    // const card = await this.cardRepository.find({
-    //   where: { id: board },
-    // });
+    const result = await Promise.all(
+      columns.map(async (column) => {
+        const cards = await this.cardRepository.find({
+          where: { columnId: column.id },
+        });
+        return cards;
+      }),
+    );
 
-    return;
+    return result;
   }
 
   async findOne(boardId: number, columnId: number, cardId: number) {
