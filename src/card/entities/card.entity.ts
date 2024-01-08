@@ -32,7 +32,9 @@ export class CardModel extends BaseModel {
   startDate?: Date;
 
   @IsDate()
-  @Column()
+  @Column({
+    nullable: true,
+  })
   dueDate?: Date;
 
   @Column()

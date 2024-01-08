@@ -20,7 +20,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         // 비밀키
         secret: configService.get<string>('JWT_SECRET'),
         // 토큰 유효 시간
-        signOptions: { expiresIn: '1d' },
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRATION_TIME'),
+        },
       }),
     }),
   ],

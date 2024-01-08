@@ -1,43 +1,54 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ColumnModel } from './entities/column.entity';
 import { CreateColumnDto } from './dtos/create-column.dto';
 import { UpdateColumnDto } from './dtos/update-column.dto';
 import { UpdateOrderDto } from './dtos/order-column.dto';
+import { CardService } from 'src/card/card.service';
+import { QueryRunner, Repository } from 'typeorm';
 
 @Injectable()
 export class ColumnService {
   constructor(
     @InjectRepository(ColumnModel)
     private columnRepository: Repository<ColumnModel>,
+    private cardService: CardService,
   ) {}
-
+  getRepository(qr: QueryRunner) {
+    return qr ? qr.manager.getRepository(ColumnModel) : this.columnRepository;
+  }
   async getAllColumns(boardId: number): Promise<ColumnModel[]> {
-    return this.columnRepository.find({
+    const columns = await this.columnRepository.find({
       where: { boardId: boardId },
       order: { order: 'ASC' },
     });
+    const cards = await this.cardService.findAll(boardId);
+    return columns.map((column) => ({
+      ...column,
+      cards,
+    }));
   }
 
   async createColumn(
     boardId: number,
     createColumnDto: CreateColumnDto,
+    qr?: QueryRunner,
   ): Promise<ColumnModel> {
-    const lastColumn = await this.columnRepository.find({
+    const repository = this.getRepository(qr);
+    const lastColumn = await repository.find({
       where: { boardId },
       order: { order: 'DESC' },
       take: 1,
     });
     const order = lastColumn.length > 0 ? lastColumn[0].order + 1 : 1;
 
-    const newColumn = this.columnRepository.create({
+    const newColumn = repository.create({
       ...createColumnDto,
       boardId,
       order,
     });
 
-    return this.columnRepository.save(newColumn);
+    return repository.save(newColumn);
   }
 
   async updateColumn(
@@ -88,5 +99,11 @@ export class ColumnService {
       where: { id: column.id },
     });
     return { column: updatedColumn, message: '순서가 바뀌었습니다' };
+  }
+
+  async createDefaultColumns(boardId: number, qr?: QueryRunner) {
+    await this.createColumn(boardId, { title: 'To Do' }, qr);
+    await this.createColumn(boardId, { title: 'Doing' }, qr);
+    await this.createColumn(boardId, { title: 'Done' }, qr);
   }
 }
