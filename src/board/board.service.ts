@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
-import { BoardModel } from './entities/board.entity';
+import { BoardModel, BoardVisibility } from './entities/board.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBoardDto } from './dtos/create-board.dto';
 import { UserModel } from 'src/user/entities/user.entity';
@@ -53,8 +53,6 @@ export class BoardService {
     level: OwnershipType,
     qr: QueryRunner,
   ) {
-    // 트랜잭션 확인하기 save 시 자동으로 commit 됨
-    // 에러 시 이 부분도 돌릴 수 없는가?
     const repository = this.getOwnerRepository(qr);
 
     const user = await this.userRepository.findOne({
@@ -166,5 +164,40 @@ export class BoardService {
     });
 
     return true;
+  }
+
+  async findPublicBoards() {
+    const boards = await this.boardRepository.find({
+      where: {
+        visibility: BoardVisibility.PUBLIC,
+      },
+    });
+
+    return boards;
+  }
+
+  async findMyBoards(userId: number) {
+    // 내가 오너인 보드
+    const boardsIOwn = await this.boardRepository.find({
+      where: {
+        owner: userId,
+      },
+    });
+
+    // 내가 속해있는 보드
+    // 오너쉽 테이블에 내가 속해있으면 갖고옴
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    const boardsIBelong = await this.ownershipRepository.find({
+      where: {
+        users: user,
+      },
+      relations: ['boards'],
+    });
+
+    return { ...boardsIOwn, ...boardsIBelong };
   }
 }
