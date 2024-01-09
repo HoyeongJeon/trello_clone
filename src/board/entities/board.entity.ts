@@ -66,9 +66,13 @@ export class BoardModel extends BaseModel {
   })
   users: UserModel[];
 
-  @OneToMany(() => ColumnModel, (column) => column.board)
+  @OneToMany(() => ColumnModel, (column) => column.board, {
+    onDelete: 'CASCADE',
+  })
   columns: ColumnModel[];
 
-  @OneToMany(() => OwnershipModel, (ownership) => ownership.boards)
+  @OneToMany(() => OwnershipModel, (ownership) => ownership.boards, {
+    onDelete: 'CASCADE',
+  })
   public ownership: OwnershipModel[];
 }

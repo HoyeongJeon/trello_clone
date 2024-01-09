@@ -222,4 +222,52 @@ export class BoardController {
       message: '보드 삭제에 성공했습니다.',
     };
   }
+
+  // 권한 변경(Owner만 가능)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Patch(':boardId/authorize')
+  async authorizeUser(
+    @Param('boardId') boardId: number,
+    @User() user,
+    @Body('targetEmail') targetEmail: string,
+    @Body('ownership') ownership: OwnershipType,
+  ) {
+    // 보드에 내가 속해있는지 확인한다.
+    const targetBoard = await this.boardService.findBoardById(boardId);
+    const myOwnership = await this.boardService.findUserOwnership(
+      targetBoard,
+      user.id,
+    );
+
+    // 내가 속해있는 보드의 권한을 확인한다.
+    // 권한이 없다면 에러를 발생시킨다.
+    if (!myOwnership || myOwnership === OwnershipType.MEMBER) {
+      throw new UnauthorizedException('권한이 없습니다.');
+    }
+
+    const targetUser = targetBoard.users.find((user) => {
+      if (user.email === targetEmail) {
+        return user;
+      }
+    });
+
+    if (!targetUser) {
+      throw new UnauthorizedException('존재하지 않는 유저입니다.');
+    }
+
+    if (myOwnership === OwnershipType.OWNER) {
+      // 아무런 권한을 다 줄 수 있음
+      const changedOwnership = await this.boardService.authorizeUser(
+        boardId,
+        targetUser,
+        ownership,
+      );
+      return {
+        statusCode: HttpStatus.OK,
+        message: '권한 변경에 성공했습니다.',
+        data: changedOwnership,
+      };
+    }
+  }
 }

@@ -17,9 +17,13 @@ export class ColumnModel extends BaseModel {
   @Column({ nullable: true })
   nextColumnId: number | null;
 
-  @ManyToOne(() => BoardModel, (board) => board.columns)
+  @ManyToOne(() => BoardModel, (board) => board.columns, {
+    onDelete: 'CASCADE',
+  })
   board: BoardModel;
 
-  @OneToMany(() => CardModel, (card) => card.column)
+  @OneToMany(() => CardModel, (card) => card.columns, {
+    onDelete: 'CASCADE',
+  })
   card: CardModel[];
 }

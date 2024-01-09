@@ -60,7 +60,9 @@ export class UserModel extends BaseModel {
   })
   password: string;
 
-  @ManyToMany(() => BoardModel, (board) => board.users)
+  @ManyToMany(() => BoardModel, (board) => board.users, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable()
   boards: BoardModel[];
 

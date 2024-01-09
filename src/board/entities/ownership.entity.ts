@@ -22,11 +22,13 @@ export class OwnershipModel extends BaseModel {
 
   @ManyToOne(() => BoardModel, (board) => board.ownership, {
     eager: true,
+    onDelete: 'CASCADE',
   })
   boards: BoardModel;
 
   @ManyToOne(() => UserModel, (user) => user.ownership, {
     eager: true,
+    onDelete: 'CASCADE',
   })
   users: UserModel;
 }
