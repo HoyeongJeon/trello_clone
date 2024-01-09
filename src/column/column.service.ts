@@ -18,6 +18,9 @@ export class ColumnService {
     return qr ? qr.manager.getRepository(ColumnModel) : this.columnRepository;
   }
   async getAllColumns(boardId: number): Promise<ColumnModel[]> {
+    if (!boardId) {
+      throw new Error('보드 값을 입력해주세요.');
+    }
     const columns = await this.columnRepository.find({
       where: { boardId: boardId },
       order: { order: 'ASC' },
@@ -47,17 +50,24 @@ export class ColumnService {
     qr?: QueryRunner,
   ): Promise<ColumnModel> {
     const repository = this.getRepository(qr);
-    const lastColumn = await repository.find({
+    const lastColumn = await repository.findOne({
       where: { boardId },
       order: { order: 'DESC' },
-      take: 1,
     });
-    const order = lastColumn.length > 0 ? lastColumn[0].order + 1 : 1;
+
+    let order = 1;
+    let nextColumnId = null;
+
+    if (lastColumn) {
+      order = lastColumn.order + 1;
+      nextColumnId = lastColumn.id;
+    }
 
     const newColumn = repository.create({
       ...createColumnDto,
       boardId,
       order,
+      nextColumnId,
     });
 
     return repository.save(newColumn);
@@ -72,45 +82,98 @@ export class ColumnService {
   }
 
   async deleteColumn(id: number): Promise<{ message: string }> {
-    const deletedOne = await this.columnRepository.delete(id);
-    if (deletedOne.affected === 0) {
-      throw new Error('이미 삭제된 컬럼입니다.');
+    const columnToDelete = await this.columnRepository.findOne({
+      where: { id },
+    });
+    if (!columnToDelete) {
+      throw new Error('존재하지 않는 컬럼입니다.');
     }
+
+    // 삭제할 컬럼의 순서
+    const deleteOrder = columnToDelete.order;
+
+    // 삭제할 컬럼보다 순서가 뒤에 있는 컬럼들의 순서를 감소
+    await this.columnRepository
+      .createQueryBuilder()
+      .update(ColumnModel)
+      .set({ order: () => 'order - 1' })
+      .where('order > :deleteOrder', { deleteOrder })
+      .execute();
+
+    await this.columnRepository
+      .createQueryBuilder()
+      .update(ColumnModel)
+      .set({ nextColumnId: columnToDelete.nextColumnId })
+      .where('nextColumnId = :id', { id })
+      .execute();
+
+    await this.columnRepository.delete(id);
     return { message: '해당 컬럼을 삭제하였습니다' };
   }
 
   async updateColumnOrderByOrder(
     boardId: number,
-    order: number,
+    currentOrderId: number,
     updateOrderDto: UpdateOrderDto,
-  ): Promise<{ column: ColumnModel; message: string }> {
-    const column = await this.columnRepository.findOne({
-      where: { boardId, order },
-    });
+  ): Promise<{ columns: ColumnModel[]; message: string }> {
+    const { toOrder } = updateOrderDto;
 
-    if (!column) {
+    // boardId와 order로 특정 컬럼 찾기
+    const currentColumn = await this.columnRepository.findOne({
+      where: { boardId, order: currentOrderId },
+    });
+    if (!currentColumn) {
       throw new Error('존재하지 않는 컬럼입니다.');
     }
 
-    const targetOrder =
-      updateOrderDto.direction === 'up' ? order - 1 : order + 1;
-
-    const targetColumn = await this.columnRepository.findOne({
-      where: { boardId, order: targetOrder },
-    });
-
-    if (targetColumn) {
-      // 순서바꾸기
-      await this.columnRepository.save([
-        { ...column, order: targetOrder },
-        { ...targetColumn, order: order },
-      ]);
+    // 이동할 위치에 이미 존재하는 컬럼들의 순서 업데이트
+    if (currentOrderId < toOrder) {
+      // 컬럼을 뒤로 이동하는 경우
+      await this.columnRepository
+        .createQueryBuilder()
+        .update(ColumnModel)
+        .set({ order: () => '`order` - 1' })
+        .where(
+          'boardId = :boardId AND `order` BETWEEN :currentOrderId AND :toOrder',
+          {
+            boardId,
+            currentOrderId: currentOrderId + 1, // 현재 컬럼 이후부터 시작
+            toOrder,
+          },
+        )
+        .execute();
+    } else {
+      // 컬럼을 앞으로 이동하는 경우
+      await this.columnRepository
+        .createQueryBuilder()
+        .update(ColumnModel)
+        .set({ order: () => '`order` + 1' })
+        .where(
+          'boardId = :boardId AND `order` BETWEEN :toOrder AND :currentOrderId',
+          {
+            boardId,
+            toOrder,
+            currentOrderId: currentOrderId - 1, // 현재 컬럼 이전까지
+          },
+        )
+        .execute();
     }
 
-    const updatedColumn = await this.columnRepository.findOne({
-      where: { id: column.id },
+    // 현재 컬럼의 순서 업데이트
+    await this.columnRepository
+      .createQueryBuilder()
+      .update(ColumnModel)
+      .set({ order: toOrder })
+      .where('id = :id', { id: currentColumn.id })
+      .execute();
+
+    // 보드의 모든 컬럼을 조회
+    const updatedColumns = await this.columnRepository.find({
+      where: { boardId: boardId },
+      order: { order: 'ASC' },
     });
-    return { column: updatedColumn, message: '순서가 바뀌었습니다' };
+
+    return { columns: updatedColumns, message: '순서가 바뀌었습니다' };
   }
 
   async createDefaultColumns(boardId: number, qr?: QueryRunner) {

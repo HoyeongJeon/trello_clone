@@ -14,6 +14,9 @@ export class ColumnModel extends BaseModel {
   @Column({ nullable: false })
   boardId: number;
 
+  @Column({ nullable: true })
+  nextColumnId: number | null;
+
   @ManyToOne(() => BoardModel, (board) => board.columns)
   board: BoardModel;
 
