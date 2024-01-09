@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import _ from 'lodash';
 import { ColumnModel } from 'src/column/entities/column.entity';
 import { BoardModel } from 'src/board/entities/board.entity';
+import { MoveColumnDto } from './dto/move-column.dto';
 
 @Injectable()
 export class CardService {
@@ -177,6 +178,18 @@ export class CardService {
     });
   }
 
+  async findCardById(id: number) {
+    const card = await this.cardRepository.findOne({
+      where: { id },
+    });
+
+    if (!card) {
+      throw new NotFoundException('존재하지 않는 카드입니다.');
+    }
+
+    return card;
+  }
+
   //카드 이동하기
   async move(
     boardId: number,
@@ -213,5 +226,25 @@ export class CardService {
       { order: currentOrder },
     );
     return { message: '카드 이동 완료.' };
+  }
+
+  //컬럼 이동하기
+  async moveColumn(cardId: number, moveColumnDto: MoveColumnDto) {
+    const { columnId: newColumnId } = moveColumnDto;
+    const card = await this.findCardById(cardId);
+    console.log(card);
+    const column = await this.columnRepository.findOneBy({ id: newColumnId });
+    console.log(column);
+    if (!column) {
+      throw new NotFoundException('존재하지 않는 컬럼입니다.');
+    }
+    await this.cardRepository.update(
+      { id: card.id },
+      { columnId: newColumnId },
+    );
+
+    // 업데이트된 카드 정보 얻기
+    const updatedColumn = await this.findById(newColumnId, cardId);
+    return { updatedColumn };
   }
 }

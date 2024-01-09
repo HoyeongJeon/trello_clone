@@ -13,6 +13,7 @@ import { CardService } from './card.service';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { MoveCardDto } from './dto/move-card.dto';
+import { MoveColumnDto } from './dto/move-column.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/user/decorators/user.decorator';
@@ -89,5 +90,16 @@ export class CardController {
     @Body() moveCardDto: MoveCardDto,
   ) {
     return this.cardService.move(+boardId, +columnId, +cardId, moveCardDto);
+  }
+
+  //컬럼이동
+  @Patch('/move/:boardId/:columnId/:cardId')
+  moveColumn(
+    @Param('boardId') boardId: string,
+    @Param('columnId') columnId: string,
+    @Param('cardId') cardId: string,
+    @Body() moveColumnDto: MoveColumnDto,
+  ) {
+    return this.cardService.moveColumn(+cardId, moveColumnDto);
   }
 }
