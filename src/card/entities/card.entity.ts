@@ -2,7 +2,9 @@ import { IsDate, IsNumber, IsString } from 'class-validator';
 import { CardDetail } from 'src/card-detail/entities/card-detail.entity';
 import { ColumnModel } from 'src/column/entities/column.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
-import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
+
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+
 
 @Entity({
   name: 'cards',
@@ -38,6 +40,10 @@ export class CardModel extends BaseModel {
   })
   dueDate?: Date;
 
+  @ManyToOne(() => ColumnModel, (column) => column.card)
+  @JoinColumn()
+  column: ColumnModel;
+
   @Column()
   columnId: number;
 
@@ -46,4 +52,5 @@ export class CardModel extends BaseModel {
 
   @OneToOne(() => CardDetail, (cardDetail) => cardDetail.cardModel)
   cardDetail: CardDetail;
+
 }

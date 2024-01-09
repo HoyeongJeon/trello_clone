@@ -15,6 +15,7 @@ import { UpdateCardDto } from './dto/update-card.dto';
 import { MoveCardDto } from './dto/move-card.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { User } from 'src/user/decorators/user.decorator';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
@@ -27,15 +28,16 @@ export class CardController {
   create(
     @Param('boardId') boardId: string,
     @Param('columnId') columnId: string,
+    @User() user,
     @Body() createCardDto: CreateCardDto,
   ) {
-    return this.cardService.create(+boardId, +columnId, createCardDto);
+    return this.cardService.create(+boardId, +columnId, user.id, createCardDto);
   }
 
   //카드 조회
-  @Get('/:boardId')
-  findAll(@Param('boardId') boardId: string) {
-    return this.cardService.findAll(+boardId);
+  @Get('/:columnId')
+  findAll(@Param('columnId') columnId: string) {
+    return this.cardService.findAll(+columnId);
   }
 
   //카드 상세 조회
@@ -55,9 +57,16 @@ export class CardController {
     @Param('boardId') boardId: string,
     @Param('columnId') columnId: string,
     @Param('cardId') cardId: string,
+    @User() user,
     @Body() updateCardDto: UpdateCardDto,
   ) {
-    return this.cardService.update(+boardId, +columnId, +cardId, updateCardDto);
+    return this.cardService.update(
+      +boardId,
+      +columnId,
+      +cardId,
+      user.id,
+      updateCardDto,
+    );
   }
 
   //카드삭제
@@ -66,8 +75,9 @@ export class CardController {
     @Param('boardId') boardId: string,
     @Param('columnId') columnId: string,
     @Param('cardId') cardId: string,
+    @User() user,
   ) {
-    return this.cardService.remove(+boardId, +columnId, +cardId);
+    return this.cardService.remove(+boardId, +columnId, +cardId, user.id);
   }
 
   //카드이동
