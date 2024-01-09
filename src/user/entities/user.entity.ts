@@ -6,6 +6,7 @@ import {
 } from 'class-validator';
 import { BoardModel } from 'src/board/entities/board.entity';
 import { OwnershipModel } from 'src/board/entities/ownership.entity';
+import { CardDetail } from 'src/card-detail/entities/card-detail.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
 
@@ -65,4 +66,7 @@ export class UserModel extends BaseModel {
 
   @OneToMany(() => OwnershipModel, (ownership) => ownership.users)
   public ownership: OwnershipModel[];
+
+  @OneToMany((type) => CardDetail, (cardDetail) => cardDetail.user)
+  cardDetailReview: CardDetail;
 }
