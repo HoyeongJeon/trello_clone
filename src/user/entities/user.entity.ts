@@ -67,6 +67,7 @@ export class UserModel extends BaseModel {
   @OneToMany(() => OwnershipModel, (ownership) => ownership.users)
   public ownership: OwnershipModel[];
 
-  @OneToMany(() => CardDetail, (cardDetail) => cardDetail.user)
+  @ManyToMany(() => CardDetail, (cardDetail) => cardDetail.users)
+  @JoinTable()
   cardDetailReview: CardDetail[];
 }
