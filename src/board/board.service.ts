@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { QueryRunner, Repository } from 'typeorm';
+import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { BoardModel, BoardVisibility } from './entities/board.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBoardDto } from './dtos/create-board.dto';
@@ -200,21 +200,18 @@ export class BoardService {
     return { ...boardsIOwn, ...boardsIBelong };
   }
 
-  async authorizeUser(boardId: number, user: UserModel, level: OwnershipType) {
-    // 보드와 유저의 관한 찾기
-    const targetBoard = await this.boardRepository.findOne({
-      where: {
-        id: boardId,
-      },
-    });
-
-    const ownership = await this.ownershipRepository.find({
-      where: {
-        boards: targetBoard,
-        users: user,
-      },
-    });
-    console.log(targetBoard);
-    console.log(ownership);
+  async authorizeUser(
+    boardId: number,
+    user: UserModel,
+    level: OwnershipType,
+    dataSource: DataSource,
+  ) {
+    await dataSource
+      .createQueryBuilder()
+      .update(OwnershipModel)
+      .set({ level })
+      .where('boards.id = :boardId', { boardId })
+      .andWhere('users.id = :userId', { userId: user.id })
+      .execute();
   }
 }

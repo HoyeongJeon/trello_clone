@@ -117,8 +117,7 @@ export class BoardController {
     } finally {
       await qr.release();
     }
-    // const board = await this.boardService.findBoardById(createBoardDto.id);
-    // await this.columnService.createDefaultColumns(board.id);
+
     return {
       statusCode: HttpStatus.OK,
       message: '보드 생성에 성공했습니다.',
@@ -154,7 +153,7 @@ export class BoardController {
 
       // 권한 체크
       // 현재 로그인 한 유저가 요청하는 보드의 소유자 또는 관리자인지 확인한다.
-      if (board.owner !== user.id || userOwnership === OwnershipType.MEMBER) {
+      if (userOwnership === OwnershipType.MEMBER) {
         throw new UnauthorizedException('초대 권한이 없습니다.');
       }
       // 초대할 유저가 존재하는지 확인한다.
@@ -258,16 +257,21 @@ export class BoardController {
 
     if (myOwnership === OwnershipType.OWNER) {
       // 아무런 권한을 다 줄 수 있음
-      const changedOwnership = await this.boardService.authorizeUser(
-        boardId,
-        targetUser,
-        ownership,
-      );
-      return {
-        statusCode: HttpStatus.OK,
-        message: '권한 변경에 성공했습니다.',
-        data: changedOwnership,
-      };
+      try {
+        await this.boardService.authorizeUser(
+          boardId,
+          targetUser,
+          ownership,
+          this.dataSource,
+        );
+        return {
+          statusCode: HttpStatus.OK,
+          message: '권한 변경에 성공했습니다.',
+        };
+      } catch (error) {
+        console.error(error);
+        throw new UnauthorizedException('권한 변경에 실패했습니다.');
+      }
     }
   }
 }
