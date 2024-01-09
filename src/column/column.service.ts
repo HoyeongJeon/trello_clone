@@ -22,11 +22,23 @@ export class ColumnService {
       where: { boardId: boardId },
       order: { order: 'ASC' },
     });
-    const cards = await this.cardService.findAll(boardId);
-    return columns.map((column) => ({
-      ...column,
-      cards,
-    }));
+
+    const result = columns.map(async (column) => {
+      const card = await this.cardService.findAll(column.id);
+      return {
+        ...column,
+        card,
+      };
+    });
+
+    const promiseResult = await Promise.all(result);
+
+    return promiseResult;
+
+    // return columns.map((column) => ({
+    //   ...column,
+    //   cards,
+    // }));
   }
 
   async createColumn(

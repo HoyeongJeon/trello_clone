@@ -1,7 +1,7 @@
 import { IsDate, IsNumber, IsString } from 'class-validator';
 import { ColumnModel } from 'src/column/entities/column.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity({
   name: 'cards',
@@ -37,9 +37,10 @@ export class CardModel extends BaseModel {
   })
   dueDate?: Date;
 
+  @ManyToOne(() => ColumnModel, (column) => column.card)
+  @JoinColumn()
+  column: ColumnModel;
+
   @Column()
   columnId: number;
-
-  @ManyToOne(() => ColumnModel, (columns) => columns.card)
-  columns: ColumnModel;
 }
