@@ -11,6 +11,7 @@ import { CommonModule } from './common/common.module';
 import { CardModule } from './card/card.module';
 import { BoardModule } from './board/board.module';
 import { ColumnModule } from './column/column.module';
+import { CardDetailModule } from './card-detail/card-detail.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ColumnModule } from './column/column.module';
     CardModule,
     BoardModule,
     ColumnModule,
+    CardDetailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
