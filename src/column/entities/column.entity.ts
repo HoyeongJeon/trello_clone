@@ -17,6 +17,6 @@ export class ColumnModel extends BaseModel {
   @ManyToOne(() => BoardModel, (board) => board.columns)
   board: BoardModel;
 
-  @OneToMany(() => CardModel, (card) => card.columns)
+  @OneToMany(() => CardModel, (card) => card.column)
   card: CardModel[];
 }
