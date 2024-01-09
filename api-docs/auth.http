@@ -15,6 +15,7 @@ Content-Type: application/json
 ### 로그인
 POST {{host}}/login
 Content-Type: application/json
+
 {
     "email":"test1@test.com",
     "password":"123456aA!"

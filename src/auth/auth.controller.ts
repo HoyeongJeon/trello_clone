@@ -45,6 +45,7 @@ export class AuthController {
   @UseGuards(PublicOnlyGuard, AuthGuard('local'))
   @Post('login')
   login(@Request() req) {
+    console.log(req.user.id);
     const data = this.authService.logIn(req.user.id);
     return {
       statusCode: HttpStatus.OK,
