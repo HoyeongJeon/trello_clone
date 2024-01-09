@@ -52,7 +52,7 @@ export class BoardService {
     board: BoardModel,
     userId: number,
     level: OwnershipType,
-    qr: QueryRunner,
+    qr?: QueryRunner,
   ) {
     const repository = this.getOwnerRepository(qr);
 
@@ -198,5 +198,23 @@ export class BoardService {
     });
 
     return { ...boardsIOwn, ...boardsIBelong };
+  }
+
+  async authorizeUser(boardId: number, user: UserModel, level: OwnershipType) {
+    // 보드와 유저의 관한 찾기
+    const targetBoard = await this.boardRepository.findOne({
+      where: {
+        id: boardId,
+      },
+    });
+
+    const ownership = await this.ownershipRepository.find({
+      where: {
+        boards: targetBoard,
+        users: user,
+      },
+    });
+    console.log(targetBoard);
+    console.log(ownership);
   }
 }

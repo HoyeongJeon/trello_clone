@@ -5,7 +5,6 @@ import { BaseModel } from 'src/common/entities/base.entity';
 
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 
-
 @Entity({
   name: 'cards',
 })
@@ -40,17 +39,17 @@ export class CardModel extends BaseModel {
   })
   dueDate?: Date;
 
-  @ManyToOne(() => ColumnModel, (column) => column.card)
-  @JoinColumn()
-  column: ColumnModel;
+  // @ManyToOne(() => ColumnModel, (column) => column.card)
+  // @JoinColumn()
+  // column: ColumnModel;
 
   @Column()
   columnId: number;
 
   @ManyToOne(() => ColumnModel, (columns) => columns.card)
+  @JoinColumn()
   columns: ColumnModel;
 
   @OneToOne(() => CardDetail, (cardDetail) => cardDetail.cardModel)
   cardDetail: CardDetail;
-
 }

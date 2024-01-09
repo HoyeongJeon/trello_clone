@@ -19,6 +19,7 @@ import {
   OwnershipType,
 } from 'src/board/entities/ownership.entity';
 import { UserModel } from 'src/user/entities/user.entity';
+import { compareSync } from 'bcrypt';
 
 @Injectable()
 export class CardService {
@@ -45,7 +46,8 @@ export class CardService {
     const board = await this.boardRepository.findOne({
       where: { id: boardId },
     });
-
+    console.log(boardId);
+    console.log(board);
     // 보드의 멤버가 아닐 경우 생성 불가
     const isMember = board.users.some((user) => user.id === userId);
 
