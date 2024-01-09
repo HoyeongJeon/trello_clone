@@ -1,7 +1,9 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CardModel } from '../entities/card.entity';
+import { IsNumber } from 'class-validator';
 
-//카드이동
-export class MoveCardDto extends PartialType(CardModel) {
+export class MoveCardDto {
+  @IsNumber()
   order?: number;
+
+  @IsNumber()
+  columnId?: number;
 }
