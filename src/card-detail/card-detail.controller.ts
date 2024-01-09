@@ -3,17 +3,17 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  // Patch,
   Param,
   Delete,
   UseGuards,
-  Request,
   HttpStatus,
 } from '@nestjs/common';
 import { CardDetailService } from './card-detail.service';
 import { CardDetailReviewDto } from './dto/create-review.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { User } from 'src/user/decorators/user.decorator';
 
 @ApiTags('Card 상세')
 @UseGuards(AuthGuard('jwt'))
@@ -25,13 +25,12 @@ export class CardDetailController {
   @Post(':cardId')
   @UseGuards(AuthGuard('jwt'))
   async createReview(
-    @Request() req,
+    @User() user,
     @Param('cardId') cardId: number,
     @Body() cardDetailReviewDto: CardDetailReviewDto,
   ) {
-    const userId = req.user.id;
     const data = await this.cardDetailService.create(
-      userId,
+      user.id,
       cardId,
       cardDetailReviewDto,
     );
@@ -44,10 +43,16 @@ export class CardDetailController {
   }
 
   @ApiBearerAuth()
-  @Get()
+  @Get(':cardId')
   @UseGuards(AuthGuard('jwt'))
-  findAll() {
-    return this.cardDetailService.findAll();
+  async findAll(@User() user, @Param('cardId') cardId: number) {
+    const data = await this.cardDetailService.getReviewByCardDetail(cardId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '카드 전체 조회를 성공했습니다.',
+      data,
+    };
   }
 
   // @Patch(':id')

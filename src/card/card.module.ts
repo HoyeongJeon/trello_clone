@@ -7,7 +7,7 @@ import { ColumnModel } from 'src/column/entities/column.entity';
 import { BoardModel } from 'src/board/entities/board.entity';
 import { OwnershipModel } from 'src/board/entities/ownership.entity';
 import { UserModel } from 'src/user/entities/user.entity';
-
+import { CardDetail } from 'src/card-detail/entities/card-detail.entity';
 @Module({
   exports: [CardService],
   imports: [
@@ -16,9 +16,10 @@ import { UserModel } from 'src/user/entities/user.entity';
       ColumnModel,
       BoardModel,
       OwnershipModel,
-      UserModel,
+      UserModel,CardDetail,
     ]),
   ],
+
   controllers: [CardController],
   providers: [CardService],
 })

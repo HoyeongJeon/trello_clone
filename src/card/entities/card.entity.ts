@@ -1,7 +1,10 @@
 import { IsDate, IsNumber, IsString } from 'class-validator';
+import { CardDetail } from 'src/card-detail/entities/card-detail.entity';
 import { ColumnModel } from 'src/column/entities/column.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+
 
 @Entity({
   name: 'cards',
@@ -43,4 +46,11 @@ export class CardModel extends BaseModel {
 
   @Column()
   columnId: number;
+
+  @ManyToOne(() => ColumnModel, (columns) => columns.card)
+  columns: ColumnModel;
+
+  @OneToOne(() => CardDetail, (cardDetail) => cardDetail.cardModel)
+  cardDetail: CardDetail;
+
 }
