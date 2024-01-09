@@ -5,10 +5,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CardModel } from './entities/card.entity';
 import { ColumnModel } from 'src/column/entities/column.entity';
 import { BoardModel } from 'src/board/entities/board.entity';
+import { OwnershipModel } from 'src/board/entities/ownership.entity';
+import { UserModel } from 'src/user/entities/user.entity';
 
 @Module({
   exports: [CardService],
-  imports: [TypeOrmModule.forFeature([CardModel, ColumnModel, BoardModel])],
+  imports: [
+    TypeOrmModule.forFeature([
+      CardModel,
+      ColumnModel,
+      BoardModel,
+      OwnershipModel,
+      UserModel,
+    ]),
+  ],
   controllers: [CardController],
   providers: [CardService],
 })
