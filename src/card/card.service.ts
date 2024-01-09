@@ -46,8 +46,11 @@ export class CardService {
     const board = await this.boardRepository.findOne({
       where: { id: boardId },
     });
-    console.log(boardId);
-    console.log(board);
+
+    if (_.isNil(board)) {
+      throw new BadRequestException('존재하지 않는 보드입니다');
+    }
+
     // 보드의 멤버가 아닐 경우 생성 불가
     const isMember = board.users.some((user) => user.id === userId);
 
@@ -104,6 +107,7 @@ export class CardService {
   async findAll(columnId: number) {
     const result = await this.cardRepository.find({
       where: { columnId },
+      order: { order: 'ASC' },
     });
     return result;
   }
@@ -111,6 +115,11 @@ export class CardService {
   // 카드 상세 조회
   async findOne(boardId: number, columnId: number, cardId: number) {
     const findCard = await this.findById(boardId, columnId, cardId);
+
+    if (_.isNil(findCard)) {
+      throw new BadRequestException('존재하지않는 카드입니다');
+    }
+
     return findCard;
   }
 
@@ -147,7 +156,7 @@ export class CardService {
     // 보드의 멤버가 아닐 시 작업담당자 할당 불가
     const isMember = board.users.some((user) => user.name === members);
 
-    if (!isMember) {
+    if (!isMember && members !== undefined) {
       throw new UnauthorizedException(
         '보드의 멤버가 아니면 할당할 수 없습니다',
       );
@@ -179,6 +188,13 @@ export class CardService {
     cardId: number,
     userId: number,
   ) {
+    // 카드가 없는 경우
+    const findCard = await this.findById(boardId, columnId, cardId);
+
+    if (_.isNil(findCard)) {
+      throw new NotFoundException('존재하지 않는 카드입니다');
+    }
+
     // 관리자, 오너가 아닐 경우 삭제 불가
     const findOwner = await this.ownershipRepository.find({
       where: { level: In([OwnershipType.ADMIN, OwnershipType.OWNER]) },
@@ -188,10 +204,33 @@ export class CardService {
       return owner.boards.id === boardId && owner.users.id === userId;
     });
 
-    if (!isOwner) {
-      throw new UnauthorizedException(
-        '카드의 담당자나 보드의 관리자가 아니면 삭제할 수 없습니다',
-      );
+    if (isOwner) {
+      // 삭제 성공 시
+      await this.cardRepository.delete({ id: findCard.id });
+
+      const board = await this.boardRepository.findOne({
+        where: { id: boardId },
+      });
+      const columns = await this.columnRepository.find({
+        where: { boardId: boardId },
+        order: { order: 'ASC' },
+      });
+
+      const result = columns.map(async (column) => {
+        const card = await this.findAll(column.id);
+        return {
+          ...column,
+          card,
+        };
+      });
+
+      const promiseResult = await Promise.all(result);
+
+      return {
+        message: '카드 삭제 성공하셨습니다',
+        board,
+        columns: promiseResult,
+      };
     }
 
     // 멤버가 아닐 경우 삭제 불가
@@ -203,22 +242,38 @@ export class CardService {
       where: { members: userName.name },
     });
 
-    if (_.isNil(findMember)) {
-      throw new UnauthorizedException(
-        '카드의 담당자나 보드의 관리자가 아니면 삭제할 수 없습니다',
-      );
+    if (findMember) {
+      // 삭제 성공 시
+      await this.cardRepository.delete({ id: findCard.id });
+
+      const board = await this.boardRepository.findOne({
+        where: { id: boardId },
+      });
+      const columns = await this.columnRepository.find({
+        where: { boardId: boardId },
+        order: { order: 'ASC' },
+      });
+
+      const result = columns.map(async (column) => {
+        const card = await this.findAll(column.id);
+        return {
+          ...column,
+          card,
+        };
+      });
+
+      const promiseResult = await Promise.all(result);
+
+      return {
+        message: '카드 삭제 성공하셨습니다',
+        board,
+        columns: promiseResult,
+      };
     }
 
-    // 카드가 없는 경우
-    const findCard = await this.findById(boardId, columnId, cardId);
-
-    if (_.isNil(findCard)) {
-      throw new NotFoundException('존재하지 않는 카드입니다');
-    }
-
-    // 삭제 성공 시
-    await this.cardRepository.delete({ id: findCard.id });
-    return { message: '카드 삭제 성공하셨습니다' };
+    throw new UnauthorizedException(
+      '카드의 담당자나 보드의 관리자가 아니면 삭제할 수 없습니다',
+    );
   }
 
   // ID로 찾는 함수
