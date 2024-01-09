@@ -43,6 +43,5 @@ export class CardDetail {
   @ManyToOne((type) => UserModel, (userModel) => userModel.cardDetailReview, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn()
   user: UserModel;
 }
