@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 import { CardModel } from 'src/card/entities/card.entity';
+import { BaseModel } from 'src/common/entities/base.entity';
 import { UserModel } from 'src/user/entities/user.entity';
 import {
   Column,
@@ -13,12 +14,12 @@ import {
 } from 'typeorm';
 
 @Entity('cardDetail')
-export class CardDetail {
+export class CardDetail extends BaseModel {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @Column({ unsigned: true })
-  userId: number;
+  // @Column({ unsigned: true })
+  // userId: number;
 
   @IsNotEmpty({ message: '댓글을 입력해주세요' })
   @IsString()
@@ -34,13 +35,13 @@ export class CardDetail {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToOne((type) => CardModel, (cardModel) => cardModel.cardDetail, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn()
-  cardModel: CardModel;
+  // @OneToOne(() => CardModel, (cardModel) => cardModel.cardDetail, {
+  //   onDelete: 'CASCADE',
+  // })
+  // @JoinColumn()
+  // cardModel: CardModel;
 
-  @ManyToOne((type) => UserModel, (userModel) => userModel.cardDetailReview, {
+  @ManyToOne(() => UserModel, (userModel) => userModel.cardDetailReview, {
     onDelete: 'CASCADE',
   })
   @JoinColumn()
