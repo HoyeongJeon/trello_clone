@@ -22,29 +22,44 @@ export class CardDetailService {
     cardId: number,
     { reviewText }: CardDetailReviewDto,
   ) {
-    const user = await this.userRepository.findOneBy({ id: userId });
-    if (!user) {
-      throw new NotFoundException('해당 유저 정보를 찾을 수 없습니다.');
-    }
+    try {
+      const user = await this.userRepository.findOneBy({ id: userId });
+      if (!user) {
+        throw new NotFoundException('해당 유저 정보를 찾을 수 없습니다.');
+      }
+      console.log(userId);
 
-    const card = await this.cardRepository.findOneBy({ id: cardId });
-    if (!card) {
-      throw new NotFoundException('해당 카드가 존재하지 않습니다.');
+      const card = await this.cardRepository.findOneBy({ id: cardId });
+      if (!card) {
+        throw new NotFoundException('해당 카드가 존재하지 않습니다.');
+      }
+      const cardReview = await this.cardDetailRepository.save({
+        userId: user.id,
+        cardId: card.id,
+        reviewText,
+      });
+
+      return cardReview;
+    } catch (err) {
+      throw err;
     }
-    await this.cardDetailRepository.save({
-      userId: user.id,
-      cardId: card.id,
-      reviewText,
+  }
+
+  async getReviewByCardDetail(cardId: number) {
+    const cardReviews = await this.cardDetailRepository.find({
+      where: { cardId },
+      relations: {
+        cardModel: {
+          cardDetail: true,
+        },
+      },
     });
+    return cardReviews;
   }
 
-  findAll() {
-    return `This action returns all cardDetail`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} cardDetail`;
-  }
+  // findOne(id: number) {
+  //   return `This action returns a #${id} cardDetail`;
+  // }
 
   // update(id: number, updateCardDetailDto: UpdateCardDetailDto) {
   //   return `This action updates a #${id} cardDetail`;

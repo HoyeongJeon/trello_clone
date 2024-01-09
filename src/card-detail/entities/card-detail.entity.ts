@@ -7,24 +7,20 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToOne,
+  ManyToMany,
   OneToOne,
-  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('cardDetail')
 export class CardDetail extends BaseModel {
-  @PrimaryGeneratedColumn({ unsigned: true })
-  id: number;
-
-  // @Column({ unsigned: true })
-  // userId: number;
-
   @IsNotEmpty({ message: '댓글을 입력해주세요' })
   @IsString()
   @Column({ type: 'text' })
   reviewText: string;
+
+  @Column({ unsigned: true })
+  userId: number;
 
   @Column({ unsigned: true })
   cardId: number;
@@ -35,14 +31,15 @@ export class CardDetail extends BaseModel {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // @OneToOne(() => CardModel, (cardModel) => cardModel.cardDetail, {
-  //   onDelete: 'CASCADE',
-  // })
-  // @JoinColumn()
-  // cardModel: CardModel;
-
-  @ManyToOne(() => UserModel, (userModel) => userModel.cardDetailReview, {
+  @OneToOne(() => CardModel, (cardModel) => cardModel.cardDetail, {
     onDelete: 'CASCADE',
   })
-  user: UserModel;
+  @JoinColumn()
+  cardModel: CardModel;
+
+  @ManyToMany(() => UserModel, (userModel) => userModel.cardDetailReview, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  users: UserModel[];
 }
