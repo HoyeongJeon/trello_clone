@@ -22,7 +22,7 @@ export class CardModel extends BaseModel {
   description: string;
 
   @IsString()
-  @Column({ nullable: true })
+  @Column({ default: '#ffffff' })
   color: string;
 
   @IsNumber()
