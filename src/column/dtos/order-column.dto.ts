@@ -1,7 +1,7 @@
-import { IsString, IsIn } from 'class-validator';
+import { IsInt, Min } from 'class-validator';
 
 export class UpdateOrderDto {
-  @IsString()
-  @IsIn(['up', 'down'])
-  direction: 'up' | 'down';
+  @IsInt()
+  @Min(1)
+  toOrder: number;
 }
