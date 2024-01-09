@@ -275,7 +275,7 @@ export class CardService {
       });
       //카드가 존재하지 않을경우
       if (!otherCard) {
-        return await this.cardRepository.update(
+        await this.cardRepository.update(
           { id: card.id },
           { columnId: newColumnId, order: newOrder },
         );
@@ -294,7 +294,7 @@ export class CardService {
             '해당 컬럼에 order번호가 이미 존재합니다.',
           );
         }
-        return await this.cardRepository.update(
+        await this.cardRepository.update(
           { id: card.id },
           { columnId: newColumnId, order: newOrder },
         );
@@ -323,7 +323,8 @@ export class CardService {
         { order: card.order },
       );
     }
+    const cardsInColumn = await this.findAll(columnId);
 
-    return { message: '카드 이동 완료.' };
+    return { message: '카드 이동 완료. 현재주소의 카드목록', cardsInColumn };
   }
 }
