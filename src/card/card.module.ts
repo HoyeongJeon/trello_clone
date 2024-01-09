@@ -16,7 +16,8 @@ import { CardDetail } from 'src/card-detail/entities/card-detail.entity';
       ColumnModel,
       BoardModel,
       OwnershipModel,
-      UserModel,CardDetail,
+      UserModel,
+      CardDetail,
     ]),
   ],
 

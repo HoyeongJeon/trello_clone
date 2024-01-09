@@ -8,12 +8,13 @@ import {
   Delete,
   UseGuards,
   HttpStatus,
+  Put,
 } from '@nestjs/common';
 import { CardDetailService } from './card-detail.service';
-import { CardDetailReviewDto } from './dto/create-review.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { User } from 'src/user/decorators/user.decorator';
+import { CardDetailReviewDto } from './dto/card-detail-reviwe.dto';
 
 @ApiTags('Card 상세')
 @UseGuards(AuthGuard('jwt'))
@@ -45,7 +46,7 @@ export class CardDetailController {
   @ApiBearerAuth()
   @Get(':cardId')
   @UseGuards(AuthGuard('jwt'))
-  async findAll(@User() user, @Param('cardId') cardId: number) {
+  async findAll(@Param('cardId') cardId: number) {
     const data = await this.cardDetailService.getReviewByCardDetail(cardId);
 
     return {
@@ -55,16 +56,35 @@ export class CardDetailController {
     };
   }
 
-  // @Patch(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() updateCardDetailDto: UpdateCardDetailDto,
-  // ) {
-  //   return this.cardDetailService.update(+id, updateCardDetailDto);
-  // }
+  @ApiBearerAuth()
+  @Put(':id')
+  @UseGuards(AuthGuard('jwt'))
+  async updateReview(
+    @User() user,
+    @Param('id') id: number,
+    @Body() cardDetailReviewDto: CardDetailReviewDto,
+  ) {
+    const data = await this.cardDetailService.update(
+      user.id,
+      id,
+      cardDetailReviewDto,
+    );
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '카드를 수정하였습니다.',
+      data,
+    };
+  }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cardDetailService.remove(+id);
+  remove(@User() user, @Param('id') id: number) {
+    const data = this.cardDetailService.deleteReview(user.id, id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: '카드를 삭제하였습니다.',
+      data,
+    };
   }
 }
