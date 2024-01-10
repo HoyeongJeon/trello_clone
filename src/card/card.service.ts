@@ -215,6 +215,20 @@ export class CardService {
         where: { boardId: boardId },
         order: { order: 'ASC' },
       });
+      // 삭제된 카드 이후의 카드들에 대해 순서 감소
+      for (const column of columns) {
+        const cards = await this.cardRepository.find({
+          where: { columnId: column.id },
+          order: { order: 'ASC' },
+        });
+
+        for (let i = 0; i < cards.length; i++) {
+          await this.cardRepository.update(
+            { id: cards[i].id },
+            { order: i + 1 },
+          );
+        }
+      }
 
       const result = columns.map(async (column) => {
         const card = await this.findAll(column.id);
@@ -312,76 +326,116 @@ export class CardService {
   ) {
     const { order: newOrder, columnId: newColumnId } = moveCardDto;
     const card = await this.findById(boardId, columnId, cardId);
+
+    //카드찾기
     if (!card) {
       throw new NotFoundException('카드가 존재하지 않습니다.');
     }
+
+    //컬럼찾기
     const column = await this.columnRepository.findOneBy({ id: newColumnId });
     if (!column) {
       throw new NotFoundException('존재하지 않는 컬럼입니다.');
     }
+    //다른 보드에 있는 컬럼으로는 이동 불가
+    if (+column.boardId !== boardId) {
+      throw new NotFoundException('다른 보드로는 이동할 수 없습니다.');
+    }
 
-    // 다른 컬럼에 카드를 이동했을 경우
+    // 다른 컬럼에 카드 이동시키기
     if (columnId !== newColumnId) {
-      // 다른 카드 찾기
       const otherCard = await this.cardRepository.findOne({
         where: {
           columnId: newColumnId,
-          order: newOrder,
           id: Not(card.id),
         },
       });
-      //카드가 존재하지 않을경우
+
+      //이동한 컬럼에 카드가 없을경우(기존컬럼에서 이동한 카드의 order번호보다 큰 숫자들을 1씩 감소)
       if (!otherCard) {
+        await this.cardRepository
+          .createQueryBuilder()
+          .update(CardModel)
+          .set({ order: () => '`order` - 1' })
+          .where('columnId = :columnId AND `order` > :currentOrder', {
+            columnId,
+            currentOrder: card.order,
+          })
+          .execute();
+        // 카드가 존재하지 않을때는 order번호 1로 고정
+        await this.cardRepository.update(
+          { id: card.id },
+          { columnId: newColumnId, order: 1 },
+        );
+      } else {
+        // 이동된 컬럼에서 이동카드의 order번호와 같거나 큰 카드들의 order번호 1씩 증가
+        await this.cardRepository
+          .createQueryBuilder()
+          .update(CardModel)
+          .set({ order: () => '`order` + 1' })
+          .where('columnId = :columnId AND `order` >= :newOrder', {
+            columnId: newColumnId,
+            newOrder,
+          })
+          .execute();
+        // 기존 컬럼에서 해당 순서 이후의 카드들의 order를 1씩 감소
+        await this.cardRepository
+          .createQueryBuilder()
+          .update(CardModel)
+          .set({ order: () => '`order` - 1' })
+          .where('columnId = :columnId AND `order` > :currentOrder', {
+            columnId,
+            currentOrder: card.order,
+          })
+          .execute();
+
         await this.cardRepository.update(
           { id: card.id },
           { columnId: newColumnId, order: newOrder },
         );
       }
-      // 다른 카드가 order번호를 이미 갖고있을경우
-      if (otherCard) {
-        const existOrder = await this.cardRepository.findOne({
-          where: {
-            columnId: newColumnId,
-            order: newOrder,
-            id: Not(card.id),
-          },
-        });
-        if (existOrder) {
-          throw new NotFoundException(
-            '해당 컬럼에 order번호가 이미 존재합니다.',
+    } else {
+      // 같은 컬럼내의 order 변경
+      const otherCard = await this.cardRepository.findOne({
+        where: {
+          columnId: newColumnId,
+          id: Not(card.id),
+        },
+      });
+
+      if (!otherCard) {
+        throw new NotFoundException('카드가 한장일 때는 이동이 불가능합니다.');
+      }
+
+      const cardsInColumn = await this.findAll(columnId);
+
+      // 카드 배열 생성
+      const cardArray = cardsInColumn.map((c) => ({ ...c }));
+
+      // 이동된 카드 찾기
+      const movedCardIndex = cardArray.findIndex((c) => c.id === card.id);
+
+      if (movedCardIndex !== -1) {
+        // 배열에서 이동된 카드 제거
+        const movedCard = cardArray.splice(movedCardIndex, 1)[0];
+
+        // 새로운 위치에 카드 삽입
+        cardArray.splice(newOrder - 1, 0, movedCard);
+
+        // 각 카드에 대해 순서 업데이트
+        for (let i = 0; i < cardArray.length; i++) {
+          await this.cardRepository.update(
+            { id: cardArray[i].id },
+            { order: i + 1 },
           );
         }
-        await this.cardRepository.update(
-          { id: card.id },
-          { columnId: newColumnId, order: newOrder },
-        );
       }
-      // 업데이트된 카드 정보 얻기
-      const updatedCard = await this.findById(boardId, newColumnId, cardId);
-      console.log(updatedCard);
-    } else {
-      //같은 컬럼내의 order 변경
-      const otherCard = await this.cardRepository.findOne({
-        where: {
-          columnId: newColumnId,
-          order: newOrder,
-          id: Not(card.id),
-        },
-      });
-      if (!otherCard) {
-        throw new NotFoundException('교환할 카드가 없습니다.');
-      }
-      const tempOrder = otherCard.order;
-      await this.cardRepository.update({ id: card.id }, { order: tempOrder });
-
-      // 다른 카드의 order를 newOrder로 업데이트
-      await this.cardRepository.update(
-        { id: otherCard.id },
-        { order: card.order },
-      );
     }
-    const cardsInColumn = await this.findAll(columnId);
-
-    return { message: '카드 이동 완료. 현재주소의 카드목록', cardsInColumn };
+    // 현재 컬럼의 카드 목록 가져오기
+    const updatedCardsInColumn = await this.findAll(columnId);
+    return {
+      message: '카드 이동 완료. 현재 주소의 카드 목록',
+      cardsInColumn: updatedCardsInColumn,
+    };
   }
 }
