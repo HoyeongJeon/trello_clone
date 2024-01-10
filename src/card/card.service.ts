@@ -69,21 +69,6 @@ export class CardService {
       throw new BadRequestException('존재하지않는 컬럼입니다');
     }
 
-    const columns = await this.columnRepository.find({
-      where: { boardId: boardId },
-      order: { order: 'ASC' },
-    });
-
-    const result = columns.map(async (column) => {
-      const card = await this.findAll(column.id);
-      return {
-        ...column,
-        card,
-      };
-    });
-
-    const promiseResult = await Promise.all(result);
-
     // 정렬 제일 마지막 수
     const maxOrder = await this.cardRepository.findOne({
       where: { columnId },
@@ -98,11 +83,6 @@ export class CardService {
         startDate: createCardDto.startDate,
         order: 1,
       });
-      return {
-        statusCode: 201,
-        message: '카드 생성 성공하셨습니다.',
-        data: { board, columns: promiseResult },
-      };
     }
 
     // 카드가 있을 시 order: 제일 큰 수 + 1  생성
@@ -112,6 +92,20 @@ export class CardService {
       order: maxOrder.order + 1,
     });
 
+    const columns = await this.columnRepository.find({
+      where: { boardId: boardId },
+      order: { order: 'ASC' },
+    });
+
+    const result = columns.map(async (column) => {
+      const card = await this.findAll(column.id);
+      return {
+        ...column,
+        card,
+      };
+    });
+
+    const promiseResult = await Promise.all(result);
     return {
       statusCode: 201,
       message: '카드 생성 성공하셨습니다.',
