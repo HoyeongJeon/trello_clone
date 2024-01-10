@@ -9,6 +9,7 @@ import { UserModule } from 'src/user/user.module';
 import { ColumnModule } from 'src/column/column.module';
 
 @Module({
+  exports: [BoardService],
   imports: [
     TypeOrmModule.forFeature([BoardModel, UserModel, OwnershipModel]),
     UserModule,
