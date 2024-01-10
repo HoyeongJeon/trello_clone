@@ -322,10 +322,21 @@ export class CardService {
     boardId: number,
     columnId: number,
     cardId: number,
+    userId: number,
     moveCardDto: MoveCardDto,
   ) {
     const { order: newOrder, columnId: newColumnId } = moveCardDto;
     const card = await this.findById(boardId, columnId, cardId);
+    const board = await this.boardRepository.findOne({
+      where: { id: boardId },
+    });
+    const isMember = board.users.some((user) => user.id === userId);
+    console.log(isMember);
+    if (!isMember) {
+      throw new UnauthorizedException(
+        '보드의 멤버가 아니면 카드를 이동 할 수 없습니다',
+      );
+    }
 
     //카드찾기
     if (!card) {

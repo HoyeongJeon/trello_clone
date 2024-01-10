@@ -86,8 +86,15 @@ export class CardController {
     @Param('boardId') boardId: string,
     @Param('columnId') columnId: string,
     @Param('cardId') cardId: string,
+    @User() user,
     @Body() moveCardDto: MoveCardDto,
   ) {
-    return this.cardService.move(+boardId, +columnId, +cardId, moveCardDto);
+    return this.cardService.move(
+      +boardId,
+      +columnId,
+      +cardId,
+      user.id,
+      moveCardDto,
+    );
   }
 }
