@@ -9,7 +9,7 @@ export class FakeUsers1704820901581 implements MigrationInterface {
       await queryRunner.query(`
       INSERT INTO \`users\` (email, password, name)
       VALUES
-      ('test${i}@test.com', '!Asdf1234', 'User ${i}')
+      ('user${i}@user.com', '!Asdf1234', 'User ${i}')
     `);
     }
     this.logger.log('Fake users created!');
