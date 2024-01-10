@@ -129,11 +129,29 @@ export class CardService {
   }
 
   // 카드 상세 조회
-  async findOne(boardId: number, columnId: number, cardId: number) {
+  async findOne(
+    boardId: number,
+    columnId: number,
+    cardId: number,
+    userId: number,
+  ) {
     const findCard = await this.findById(boardId, columnId, cardId);
 
     if (_.isNil(findCard)) {
       throw new BadRequestException('존재하지않는 카드입니다');
+    }
+
+    const board = await this.boardRepository.findOne({
+      where: { id: boardId },
+    });
+
+    // 보드의 멤버가 아닐 경우 조회 불가
+    const isMember = board.users.some((user) => user.id === userId);
+
+    if (!isMember) {
+      throw new UnauthorizedException(
+        '보드의 멤버가 아니면 조회할 수 없습니다',
+      );
     }
 
     return findCard;

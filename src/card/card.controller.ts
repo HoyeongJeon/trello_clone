@@ -46,8 +46,9 @@ export class CardController {
     @Param('boardId') boardId: string,
     @Param('columnId') columnId: string,
     @Param('cardId') cardId: string,
+    @User() user,
   ) {
-    return this.cardService.findOne(+boardId, +columnId, +cardId);
+    return this.cardService.findOne(+boardId, +columnId, +cardId, user.id);
   }
 
   //카드수정
