@@ -4,16 +4,16 @@ import {
   createParamDecorator,
 } from '@nestjs/common';
 
-export const QueryRunner = createParamDecorator(
+export const qr = createParamDecorator(
   (data: unknown, context: ExecutionContext) => {
     const req = context.switchToHttp().getRequest();
 
-    if (!req.queryRunner) {
+    if (!req.qr) {
       throw new InternalServerErrorException(
-        `QueryRunner Decorator를 사용하려면 TransactionInterceptor를 적용해야 합니다.`,
+        `TransactionInterceptor가 적용되지 않았습니다.`,
       );
     }
 
-    return req.queryRunner;
+    return req.qr;
   },
 );
