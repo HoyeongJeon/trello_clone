@@ -4,6 +4,9 @@
 /dist
 /node_modules
 
+#ppt
+presentation.pptx
+
 # Logs
 logs
 *.log
