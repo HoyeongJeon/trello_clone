@@ -146,14 +146,13 @@ export class BoardController {
     try {
       const board = await this.boardService.findBoardById(boardId);
 
+      console.log(user.id);
       const userOwnership: unknown = await this.boardService.findUserOwnership(
         board,
         user.id,
       );
-
-      // 권한 체크
-      // 현재 로그인 한 유저가 요청하는 보드의 소유자 또는 관리자인지 확인한다.
-      if (userOwnership === OwnershipType.MEMBER) {
+      // 현재 로그인 한 유저가 요청하는 보드의 소유자 또는 관리자인지 확인한다. || 로그인 한 유저가 보드에 속해있는지도 확인
+      if (userOwnership === OwnershipType.MEMBER || !userOwnership) {
         throw new UnauthorizedException('초대 권한이 없습니다.');
       }
       // 초대할 유저가 존재하는지 확인한다.
