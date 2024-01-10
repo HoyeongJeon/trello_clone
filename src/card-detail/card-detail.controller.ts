@@ -23,15 +23,19 @@ export class CardDetailController {
   constructor(private readonly cardDetailService: CardDetailService) {}
 
   @ApiBearerAuth()
-  @Post(':cardId')
+  @Post(':boardId/:columnId/:cardId')
   @UseGuards(AuthGuard('jwt'))
   async createReview(
     @User() user,
+    @Param('boardId') boardId: number,
+    @Param('columnId') columnId: number,
     @Param('cardId') cardId: number,
     @Body() cardDetailReviewDto: CardDetailReviewDto,
   ) {
     const data = await this.cardDetailService.create(
       user.id,
+      boardId,
+      columnId,
       cardId,
       cardDetailReviewDto,
     );
@@ -44,10 +48,20 @@ export class CardDetailController {
   }
 
   @ApiBearerAuth()
-  @Get(':cardId')
+  @Get('/:boardId/:column/:cardId')
   @UseGuards(AuthGuard('jwt'))
-  async findAll(@Param('cardId') cardId: number) {
-    const data = await this.cardDetailService.getReviewByCardDetail(cardId);
+  async findAll(
+    @User() user,
+    @Param('boardId') boardId: number,
+    @Param('columnId') columnId: number,
+    @Param('cardId') cardId: number,
+  ) {
+    const data = await this.cardDetailService.getReviewByCardDetail(
+      user.id,
+      boardId,
+      columnId,
+      cardId,
+    );
 
     return {
       statusCode: HttpStatus.OK,
@@ -57,15 +71,21 @@ export class CardDetailController {
   }
 
   @ApiBearerAuth()
-  @Put(':id')
+  @Put('/:boardId/:column/:cardId/:id')
   @UseGuards(AuthGuard('jwt'))
   async updateReview(
     @User() user,
+    @Param('boardId') boardId: number,
+    @Param('columnId') columnId: number,
+    @Param('cardId') cardId: number,
     @Param('id') id: number,
     @Body() cardDetailReviewDto: CardDetailReviewDto,
   ) {
     const data = await this.cardDetailService.update(
       user.id,
+      boardId,
+      columnId,
+      cardId,
       id,
       cardDetailReviewDto,
     );
@@ -77,9 +97,21 @@ export class CardDetailController {
     };
   }
 
-  @Delete(':id')
-  remove(@User() user, @Param('id') id: number) {
-    const data = this.cardDetailService.deleteReview(user.id, id);
+  @Delete('/:boardId/:column/:cardId/:id')
+  remove(
+    @User() user,
+    @Param('boardId') boardId: number,
+    @Param('columnId') columnId: number,
+    @Param('cardId') cardId: number,
+    @Param('id') id: number,
+  ) {
+    const data = this.cardDetailService.deleteReview(
+      user.id,
+      boardId,
+      columnId,
+      cardId,
+      id,
+    );
 
     return {
       statusCode: HttpStatus.OK,
