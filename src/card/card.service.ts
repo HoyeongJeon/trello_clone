@@ -69,34 +69,6 @@ export class CardService {
       throw new BadRequestException('존재하지않는 컬럼입니다');
     }
 
-    // 정렬 제일 마지막 수
-    const maxOrder = await this.cardRepository.findOne({
-      where: { columnId },
-      order: { order: 'DESC' },
-    });
-
-    // 카드가 하나도 없을 시 order: 1 로 생성
-    if (_.isNil(maxOrder)) {
-      const result = await this.cardRepository.save({
-        columnId,
-        title: createCardDto.title,
-        startDate: createCardDto.startDate,
-        order: 1,
-      });
-      return {
-        statusCode: 201,
-        message: '카드 생성 성공하셨습니다.',
-        data: { result },
-      };
-    }
-
-    // 카드가 있을 시 order: 제일 큰 수 + 1  생성
-    await this.cardRepository.save({
-      columnId,
-      title: createCardDto.title,
-      order: maxOrder.order + 1,
-    });
-
     const columns = await this.columnRepository.find({
       where: { boardId: boardId },
       order: { order: 'ASC' },
@@ -111,6 +83,34 @@ export class CardService {
     });
 
     const promiseResult = await Promise.all(result);
+
+    // 정렬 제일 마지막 수
+    const maxOrder = await this.cardRepository.findOne({
+      where: { columnId },
+      order: { order: 'DESC' },
+    });
+
+    // 카드가 하나도 없을 시 order: 1 로 생성
+    if (_.isNil(maxOrder)) {
+      await this.cardRepository.save({
+        columnId,
+        title: createCardDto.title,
+        startDate: createCardDto.startDate,
+        order: 1,
+      });
+      return {
+        statusCode: 201,
+        message: '카드 생성 성공하셨습니다.',
+        data: { board, columns: promiseResult },
+      };
+    }
+
+    // 카드가 있을 시 order: 제일 큰 수 + 1  생성
+    await this.cardRepository.save({
+      columnId,
+      title: createCardDto.title,
+      order: maxOrder.order + 1,
+    });
 
     return {
       statusCode: 201,
@@ -154,7 +154,11 @@ export class CardService {
       );
     }
 
-    return findCard;
+    return {
+      statusCode: 201,
+      message: '카드조회 성공하셨습니다.',
+      data: { findCard },
+    };
   }
 
   // 카드 수정
@@ -209,10 +213,27 @@ export class CardService {
       },
     );
 
-    // 업데이트된 정보 반환
-    return await this.cardRepository.findOne({
-      where: { id: findCard.id },
+    const columns = await this.columnRepository.find({
+      where: { boardId: boardId },
+      order: { order: 'ASC' },
     });
+
+    const result = columns.map(async (column) => {
+      const card = await this.findAll(column.id);
+      return {
+        ...column,
+        card,
+      };
+    });
+
+    const promiseResult = await Promise.all(result);
+
+    // 업데이트된 정보 반환
+    return {
+      statusCode: 201,
+      message: '업데이트 성공하셨습니다.',
+      data: { promiseResult },
+    };
   }
 
   // 카드 삭제
@@ -239,46 +260,9 @@ export class CardService {
     });
 
     if (isOwner) {
-      // 삭제 성공 시
-      await this.cardRepository.delete({ id: findCard.id });
+      const result = this.deleteSuccess(boardId, findCard.id);
 
-      const board = await this.boardRepository.findOne({
-        where: { id: boardId },
-      });
-      const columns = await this.columnRepository.find({
-        where: { boardId: boardId },
-        order: { order: 'ASC' },
-      });
-      // 삭제된 카드 이후의 카드들에 대해 순서 감소
-      for (const column of columns) {
-        const cards = await this.cardRepository.find({
-          where: { columnId: column.id },
-          order: { order: 'ASC' },
-        });
-
-        for (let i = 0; i < cards.length; i++) {
-          await this.cardRepository.update(
-            { id: cards[i].id },
-            { order: i + 1 },
-          );
-        }
-      }
-
-      const result = columns.map(async (column) => {
-        const card = await this.findAll(column.id);
-        return {
-          ...column,
-          card,
-        };
-      });
-
-      const promiseResult = await Promise.all(result);
-
-      return {
-        message: '카드 삭제 성공하셨습니다',
-        board,
-        columns: promiseResult,
-      };
+      return result;
     }
 
     // 멤버가 아닐 경우 삭제 불가
@@ -291,32 +275,9 @@ export class CardService {
     });
 
     if (findMember) {
-      // 삭제 성공 시
-      await this.cardRepository.delete({ id: findCard.id });
+      const result = this.deleteSuccess(boardId, findCard.id);
 
-      const board = await this.boardRepository.findOne({
-        where: { id: boardId },
-      });
-      const columns = await this.columnRepository.find({
-        where: { boardId: boardId },
-        order: { order: 'ASC' },
-      });
-
-      const result = columns.map(async (column) => {
-        const card = await this.findAll(column.id);
-        return {
-          ...column,
-          card,
-        };
-      });
-
-      const promiseResult = await Promise.all(result);
-
-      return {
-        message: '카드 삭제 성공하셨습니다',
-        board,
-        columns: promiseResult,
-      };
+      return result;
     }
 
     throw new UnauthorizedException(
@@ -349,6 +310,46 @@ export class CardService {
     }
 
     return card;
+  }
+
+  async deleteSuccess(boardId: number, findCard: number) {
+    // 삭제 성공 시
+    await this.cardRepository.delete({ id: findCard });
+
+    const board = await this.boardRepository.findOne({
+      where: { id: boardId },
+    });
+    const columns = await this.columnRepository.find({
+      where: { boardId: boardId },
+      order: { order: 'ASC' },
+    });
+    // 삭제된 카드 이후의 카드들에 대해 순서 감소
+    for (const column of columns) {
+      const cards = await this.cardRepository.find({
+        where: { columnId: column.id },
+        order: { order: 'ASC' },
+      });
+
+      for (let i = 0; i < cards.length; i++) {
+        await this.cardRepository.update({ id: cards[i].id }, { order: i + 1 });
+      }
+    }
+
+    const result = columns.map(async (column) => {
+      const card = await this.findAll(column.id);
+      return {
+        ...column,
+        card,
+      };
+    });
+
+    const promiseResult = await Promise.all(result);
+
+    return {
+      message: '카드 삭제 성공하셨습니다',
+      board,
+      columns: promiseResult,
+    };
   }
 
   //카드 이동하기
