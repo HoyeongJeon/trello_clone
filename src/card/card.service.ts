@@ -225,6 +225,20 @@ export class CardService {
       });
 
       const promiseResult = await Promise.all(result);
+      // 삭제된 카드 이후의 카드들에 대해 순서 감소
+      for (const column of columns) {
+        const cards = await this.cardRepository.find({
+          where: { columnId: column.id },
+          order: { order: 'ASC' },
+        });
+
+        for (let i = 0; i < cards.length; i++) {
+          await this.cardRepository.update(
+            { id: cards[i].id },
+            { order: i + 1 },
+          );
+        }
+      }
 
       return {
         message: '카드 삭제 성공하셨습니다',
@@ -393,21 +407,37 @@ export class CardService {
         throw new NotFoundException('카드가 한장일 때는 이동이 불가능합니다.');
       }
 
-      const tempOrder = otherCard.order;
+      const cardsInColumn = await this.findAll(columnId);
 
-      // 다른 카드의 order를 newOrder로 업데이트
-      await this.cardRepository.update(
-        { id: otherCard.id },
-        { order: card.order },
-      );
+      // 카드 배열 생성
+      const cardArray = cardsInColumn.map((c) => ({ ...c }));
 
-      // 카드의 order를 다른 카드의 order로 업데이트
-      await this.cardRepository.update({ id: card.id }, { order: tempOrder });
+      // 이동된 카드 찾기
+      const movedCardIndex = cardArray.findIndex((c) => c.id === card.id);
+
+      if (movedCardIndex !== -1) {
+        // 배열에서 이동된 카드 제거
+        const movedCard = cardArray.splice(movedCardIndex, 1)[0];
+
+        // 새로운 위치에 카드 삽입
+        cardArray.splice(newOrder - 1, 0, movedCard);
+
+        // 각 카드에 대해 순서 업데이트
+        for (let i = 0; i < cardArray.length; i++) {
+          await this.cardRepository.update(
+            { id: cardArray[i].id },
+            { order: i + 1 },
+          );
+        }
+      }
+
+      // 현재 컬럼의 카드 목록 가져오기
+      const updatedCardsInColumn = await this.findAll(columnId);
+
+      return {
+        message: '카드 이동 완료. 현재 주소의 카드 목록',
+        cardsInColumn: updatedCardsInColumn,
+      };
     }
-
-    // 현재 컬럼의 카드 목록 가져오기
-    const cardsInColumn = await this.findAll(columnId);
-
-    return { message: '카드 이동 완료. 현재주소의 카드목록', cardsInColumn };
   }
 }
