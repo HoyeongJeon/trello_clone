@@ -49,6 +49,7 @@ export class ColumnController {
     return this.columnService.createColumn(boardId, createColumnDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async updateColumn(
     @Param('id') id: number,
@@ -57,11 +58,13 @@ export class ColumnController {
     return this.columnService.updateColumn(id, updateColumnDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async deleteColumn(@Param('id') id: number) {
     return this.columnService.deleteColumn(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch('order/:order')
   async updateColumnOrder(
     @Param('boardId') boardId: number,
