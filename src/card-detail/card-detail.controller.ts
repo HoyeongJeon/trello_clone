@@ -48,7 +48,7 @@ export class CardDetailController {
   }
 
   @ApiBearerAuth()
-  @Get('/:boardId/:column/:cardId')
+  @Get('/:boardId/:columnId/:cardId')
   @UseGuards(AuthGuard('jwt'))
   async findAll(
     @User() user,
@@ -71,7 +71,7 @@ export class CardDetailController {
   }
 
   @ApiBearerAuth()
-  @Put('/:boardId/:column/:cardId/:id')
+  @Put('/:boardId/:columnId/:cardId/:id')
   @UseGuards(AuthGuard('jwt'))
   async updateReview(
     @User() user,
@@ -97,15 +97,15 @@ export class CardDetailController {
     };
   }
 
-  @Delete('/:boardId/:column/:cardId/:id')
-  remove(
+  @Delete('/:boardId/:columnId/:cardId/:id')
+  async remove(
     @User() user,
     @Param('boardId') boardId: number,
     @Param('columnId') columnId: number,
     @Param('cardId') cardId: number,
     @Param('id') id: number,
   ) {
-    const data = this.cardDetailService.deleteReview(
+    const data = await this.cardDetailService.deleteReview(
       user.id,
       boardId,
       columnId,
