@@ -37,11 +37,6 @@ export class ColumnService {
     const promiseResult = await Promise.all(result);
 
     return promiseResult;
-
-    // return columns.map((column) => ({
-    //   ...column,
-    //   cards,
-    // }));
   }
 
   async createColumn(
@@ -159,13 +154,33 @@ export class ColumnService {
         .execute();
     }
 
-    // 현재 컬럼의 순서 업데이트
-    await this.columnRepository
-      .createQueryBuilder()
-      .update(ColumnModel)
-      .set({ order: toOrder })
-      .where('id = :id', { id: currentColumn.id })
-      .execute();
+    // nextColumnId 업데이트
+    let newNextColumnId = null;
+    if (toOrder < currentOrderId) {
+      // 컬럼을 앞으로 이동하는 경우
+      const nextColumn = await this.columnRepository.findOne({
+        where: { boardId, order: toOrder + 1 },
+      });
+      newNextColumnId = nextColumn ? nextColumn.id : null;
+    } else {
+      // 컬럼을 뒤로 이동하는 경우
+      const previousColumn = await this.columnRepository.findOne({
+        where: { boardId, order: toOrder - 1 },
+      });
+      newNextColumnId = currentColumn.id;
+      if (previousColumn) {
+        // 이전 컬럼의 nextColumnId 업데이트
+        await this.columnRepository.update(previousColumn.id, {
+          nextColumnId: currentColumn.id,
+        });
+      }
+    }
+
+    // 현재 컬럼의 순서 및 nextColumnId 업데이트
+    await this.columnRepository.update(currentColumn.id, {
+      order: toOrder,
+      nextColumnId: newNextColumnId,
+    });
 
     // 보드의 모든 컬럼을 조회
     const updatedColumns = await this.columnRepository.find({
