@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CardDetail } from './entities/card-detail.entity';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { UserModel } from 'src/user/entities/user.entity';
 import { CardModel } from 'src/card/entities/card.entity';
 import { CardDetailReviewDto } from './dto/card-detail-reviwe.dto';
@@ -33,6 +33,7 @@ export class CardDetailService {
     private readonly columnModelRepository: Repository<ColumnModel>,
     @InjectRepository(OwnershipModel)
     private readonly ownershipModelRepository: Repository<OwnershipModel>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(
@@ -88,6 +89,7 @@ export class CardDetailService {
         boardId: board.id,
         columnId: column.id,
         cardId: card.id,
+        cardModel: card,
         reviewText,
       });
 
@@ -124,21 +126,23 @@ export class CardDetailService {
   ) {
     const board = await this.boardRepository.findOne({
       where: { id: boardId },
+      relations: ['users', 'columns', 'columns.card'],
     });
 
     if (_.isNil(board)) {
       throw new NotFoundException('존재하지 않는 보드입니다');
     }
-
-    const column = await this.columnModelRepository.findOneBy({
-      id: columnId,
-    });
+    const column = board.columns.find((column) => column.id === columnId);
 
     if (!column) {
       throw new NotFoundException('존재하지 않는 컬럼입니다');
     }
 
-    const card = await this.cardRepository.findOneBy({ id: cardId });
+    const card = await this.cardRepository.findOne({
+      where: { id: cardId },
+      relations: ['cardDetail'],
+    });
+
     if (!card) {
       throw new NotFoundException('해당 카드가 존재하지 않습니다.');
     }
@@ -206,31 +210,27 @@ export class CardDetailService {
   ) {
     const board = await this.boardRepository.findOne({
       where: { id: boardId },
+      relations: ['users', 'columns', 'columns.card'],
     });
-
     if (_.isNil(board)) {
       throw new NotFoundException('해당 보드가 존재하지 않습니다.');
     }
 
-    const column = await this.columnModelRepository.findOneBy({
-      id: columnId,
-    });
+    const column = board.columns.find((column) => column.id === columnId);
 
     if (!column) {
       throw new NotFoundException('해당 컬럼이 존재하지 않습니다.');
     }
-
-    const card = await this.cardRepository.findOneBy({
-      id: cardId,
+    const card = await this.cardRepository.findOne({
+      where: { id: cardId },
+      relations: ['cardDetail'],
     });
 
     if (!card) {
       throw new NotFoundException('해당 카드가 존재하지않습니다.');
     }
+    const review = card.cardDetail.find((cardDetail) => cardDetail.id === id);
 
-    const review = await this.cardDetailRepository.findOneBy({
-      id,
-    });
     if (!review) {
       throw new NotFoundException('해당 댓글이 존재하지 않습니다.');
     }
@@ -288,31 +288,30 @@ export class CardDetailService {
   ) {
     const board = await this.boardRepository.findOne({
       where: { id: boardId },
+      relations: ['users', 'columns', 'columns.card'],
     });
 
     if (_.isNil(board)) {
       throw new NotFoundException('존재하지 않는 보드입니다');
     }
 
-    const column = await this.columnModelRepository.findOneBy({
-      id: columnId,
-    });
+    const column = board.columns.find((column) => column.id === columnId);
 
     if (!column) {
       throw new NotFoundException('존재하지 않는 컬럼입니다');
     }
 
-    const card = await this.cardRepository.findOneBy({
-      id: cardId,
+    const card = await this.cardRepository.findOne({
+      where: { id: cardId },
+      relations: ['cardDetail'],
     });
 
     if (!card) {
       throw new NotFoundException('존재하지 않는 카드입니다');
     }
 
-    const review = await this.cardDetailRepository.findOneBy({
-      id,
-    });
+    const review = card.cardDetail.find((cardDetail) => cardDetail.id === id);
+
     if (!review) {
       throw new NotFoundException('해당 댓글이 존재하지 않습니다.');
     }

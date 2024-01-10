@@ -3,7 +3,14 @@ import { CardDetail } from 'src/card-detail/entities/card-detail.entity';
 import { ColumnModel } from 'src/column/entities/column.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
 
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 
 @Entity({
   name: 'cards',
@@ -50,6 +57,6 @@ export class CardModel extends BaseModel {
   @JoinColumn()
   columns: ColumnModel;
 
-  @OneToOne(() => CardDetail, (cardDetail) => cardDetail.cardModel)
-  cardDetail: CardDetail;
+  @OneToMany(() => CardDetail, (cardDetail) => cardDetail.cardModel)
+  cardDetail: CardDetail[];
 }

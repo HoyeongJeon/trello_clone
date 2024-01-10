@@ -35,7 +35,7 @@ export class CardDetail extends BaseModel {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToOne(() => CardModel, (cardModel) => cardModel.cardDetail, {
+  @ManyToOne(() => CardModel, (cardModel) => cardModel.cardDetail, {
     onDelete: 'CASCADE',
   })
   @JoinColumn()
