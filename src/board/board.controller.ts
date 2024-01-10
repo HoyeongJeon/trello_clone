@@ -272,6 +272,8 @@ export class BoardController {
         console.error(error);
         throw new UnauthorizedException('권한 변경에 실패했습니다.');
       }
+    } else {
+      throw new UnauthorizedException('권한 변경은 오너만 가능합니다.');
     }
   }
 }
