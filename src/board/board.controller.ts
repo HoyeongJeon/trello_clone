@@ -9,6 +9,7 @@ import {
   Post,
   UnauthorizedException,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -19,6 +20,9 @@ import { OwnershipType } from './entities/ownership.entity';
 import { DataSource } from 'typeorm/data-source/DataSource';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ColumnService } from 'src/column/column.service';
+import { QueryRunner } from 'typeorm';
+import { TransactionInterceptor } from 'src/common/interceptors/transaction.interceptor';
+import { qr } from 'src/common/decorators/qr.decorator';
 
 @ApiTags('보드')
 @Controller('board')
@@ -92,31 +96,25 @@ export class BoardController {
   @ApiBearerAuth()
   @Post('/')
   @UseGuards(JwtAuthGuard)
-  async createBoard(@Body() createBoardDto: CreateBoardDto, @User() user) {
-    const qr = this.dataSource.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
-    try {
-      const board = await this.boardService.createBoard(
-        createBoardDto,
-        user.id,
-        qr,
-      );
+  @UseInterceptors(TransactionInterceptor)
+  async createBoard(
+    @Body() createBoardDto: CreateBoardDto,
+    @User() user,
+    @qr() qr: QueryRunner,
+  ) {
+    const board = await this.boardService.createBoard(
+      createBoardDto,
+      user.id,
+      qr,
+    );
 
-      await this.columnService.createDefaultColumns(board.id, qr);
-      await this.boardService.saveOwnership(
-        board,
-        user.id,
-        OwnershipType.OWNER,
-        qr,
-      );
-      await qr.commitTransaction();
-    } catch (error) {
-      await qr.rollbackTransaction();
-      throw error;
-    } finally {
-      await qr.release();
-    }
+    await this.columnService.createDefaultColumns(board.id, qr);
+    await this.boardService.saveOwnership(
+      board,
+      user.id,
+      OwnershipType.OWNER,
+      qr,
+    );
 
     return {
       statusCode: HttpStatus.OK,
@@ -134,51 +132,42 @@ export class BoardController {
   @ApiBearerAuth()
   @Post(':boardId/invite')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(TransactionInterceptor)
   async inviteUser(
     @Param('boardId') boardId: number,
     @User() user,
     @Body('targetEmail') targetEmail: string,
+    @qr() qr: QueryRunner,
   ) {
-    const qr = this.dataSource.createQueryRunner();
-    await qr.connect();
-    await qr.startTransaction();
+    const board = await this.boardService.findBoardById(boardId);
 
-    try {
-      const board = await this.boardService.findBoardById(boardId);
-
-      console.log(user.id);
-      const userOwnership: unknown = await this.boardService.findUserOwnership(
-        board,
-        user.id,
-      );
-      // 현재 로그인 한 유저가 요청하는 보드의 소유자 또는 관리자인지 확인한다. || 로그인 한 유저가 보드에 속해있는지도 확인
-      if (userOwnership === OwnershipType.MEMBER || !userOwnership) {
-        throw new UnauthorizedException('초대 권한이 없습니다.');
-      }
-      // 초대할 유저가 존재하는지 확인한다.
-      const invitedUser = await this.userService.findUserByEmail(targetEmail);
-      // 보드에 유저가 있는지 확인한다.
-      const isUserInBoard = board.users.find(
-        (user) => user.id === invitedUser.id,
-      );
-      if (isUserInBoard) {
-        throw new UnauthorizedException('이미 보드에 속해있는 유저입니다.');
-      }
-      // 보드에 유저를 추가한다.
-      await this.boardService.inviteUser(board, invitedUser, qr);
-      await this.boardService.saveOwnership(
-        board,
-        invitedUser.id,
-        OwnershipType.MEMBER,
-        qr,
-      );
-      await qr.commitTransaction();
-    } catch (error) {
-      await qr.rollbackTransaction();
-      throw error;
-    } finally {
-      await qr.release();
+    const userOwnership: unknown = await this.boardService.findUserOwnership(
+      board,
+      user.id,
+    );
+    // 현재 로그인 한 유저가 요청하는 보드의 소유자 또는 관리자인지 확인한다. || 로그인 한 유저가 보드에 속해있는지도 확인
+    if (userOwnership === OwnershipType.MEMBER || !userOwnership) {
+      throw new UnauthorizedException('초대 권한이 없습니다.');
     }
+    // 초대할 유저가 존재하는지 확인한다.
+    const invitedUser = await this.userService.findUserByEmail(targetEmail);
+    // 보드에 유저가 있는지 확인한다.
+    const isUserInBoard = board.users.find(
+      (user) => user.id === invitedUser.id,
+    );
+    if (isUserInBoard) {
+      throw new UnauthorizedException('이미 보드에 속해있는 유저입니다.');
+    }
+    // 보드에 유저를 추가한다.
+    await this.boardService.inviteUser(board, invitedUser, qr);
+    await this.boardService.saveOwnership(
+      board,
+      invitedUser.id,
+      OwnershipType.MEMBER,
+      qr,
+    );
+
+    // throw new Error('에러');
 
     return {
       statusCode: HttpStatus.OK,
