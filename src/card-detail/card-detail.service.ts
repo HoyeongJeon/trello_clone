@@ -57,6 +57,7 @@ export class CardDetailService {
           cardDetail: true,
         },
       },
+      order: { createdAt: 'DESC' },
     });
     return cardReviews;
   }

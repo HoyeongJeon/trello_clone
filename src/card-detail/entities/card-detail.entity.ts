@@ -30,7 +30,7 @@ export class CardDetail extends BaseModel {
   cardId: number;
 
   @CreateDateColumn()
-  createAt: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
