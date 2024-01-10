@@ -91,15 +91,31 @@ export class CardService {
     }
 
     // 카드가 있을 시 order: 제일 큰 수 + 1  생성
-    const result = await this.cardRepository.save({
+    await this.cardRepository.save({
       columnId,
       title: createCardDto.title,
       order: maxOrder.order + 1,
     });
+
+    const columns = await this.columnRepository.find({
+      where: { boardId: boardId },
+      order: { order: 'ASC' },
+    });
+
+    const result = columns.map(async (column) => {
+      const card = await this.findAll(column.id);
+      return {
+        ...column,
+        card,
+      };
+    });
+
+    const promiseResult = await Promise.all(result);
+
     return {
       statusCode: 201,
       message: '카드 생성 성공하셨습니다.',
-      data: { result },
+      data: { board, columns: promiseResult },
     };
   }
 
