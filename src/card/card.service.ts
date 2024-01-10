@@ -365,6 +365,7 @@ export class CardService {
     const board = await this.boardRepository.findOne({
       where: { id: boardId },
     });
+    // 1. 멤버권한 확인
     const isMember = board.users.some((user) => user.id === userId);
     console.log(isMember);
     if (!isMember) {
@@ -373,22 +374,22 @@ export class CardService {
       );
     }
 
-    //카드찾기
+    //2. 카드찾기( 존재하지 않는 카드일경우 오류)
     if (!card) {
       throw new NotFoundException('카드가 존재하지 않습니다.');
     }
 
-    //컬럼찾기
+    //3. 컬럼찾기( 존재하지 않는 컬럼일경우 오류)
     const column = await this.columnRepository.findOneBy({ id: newColumnId });
     if (!column) {
       throw new NotFoundException('존재하지 않는 컬럼입니다.');
     }
-    //다른 보드에 있는 컬럼으로는 이동 불가
+    //4. 다른 board에 있는 column으로는 이동 불가
     if (+column.boardId !== boardId) {
       throw new NotFoundException('다른 보드로는 이동할 수 없습니다.');
     }
 
-    // 다른 컬럼에 카드 이동시키기
+    //5. 다른컬럼에 카드 이동시키기(columnId 와 res.body에 넣은 columnId 가 다를경우)
     if (columnId !== newColumnId) {
       const otherCard = await this.cardRepository.findOne({
         where: {
@@ -397,7 +398,7 @@ export class CardService {
         },
       });
 
-      //이동한 컬럼에 카드가 없을경우(기존컬럼에서 이동한 카드의 order번호보다 큰 숫자들을 1씩 감소)
+      //5-1 이동한 컬럼에 카드가 없을경우(기존컬럼에서 이동한 카드의 order번호보다 큰 숫자들을 1씩 감소)
       if (!otherCard) {
         await this.cardRepository
           .createQueryBuilder()
@@ -408,12 +409,13 @@ export class CardService {
             currentOrder: card.order,
           })
           .execute();
-        // 카드가 존재하지 않을때는 order번호 1로 고정
+        // - 이동카드 정보 업데이트. 카드가 없기 떄문에 order번호를 1로 고정
         await this.cardRepository.update(
           { id: card.id },
           { columnId: newColumnId, order: 1 },
         );
       } else {
+        // 5-2.이동한 컬럼에 카드가 존재할경우
         // 이동된 컬럼에서 이동카드의 order번호와 같거나 큰 카드들의 order번호 1씩 증가
         await this.cardRepository
           .createQueryBuilder()
@@ -435,13 +437,15 @@ export class CardService {
           })
           .execute();
 
+        //- 이동카드 정보 업데이트
         await this.cardRepository.update(
           { id: card.id },
           { columnId: newColumnId, order: newOrder },
         );
       }
     } else {
-      // 같은 컬럼내의 order 변경
+      // 6. 같은 컬럼에서 카드 이동시키기
+      //6-1.otehrCard로 컬럼내의 카드존재여부 확인(없을시 이동 불가능 order=1)
       const otherCard = await this.cardRepository.findOne({
         where: {
           columnId: newColumnId,
@@ -452,23 +456,23 @@ export class CardService {
       if (!otherCard) {
         throw new NotFoundException('카드가 한장일 때는 이동이 불가능합니다.');
       }
-
+      //6-2.column 내의 모든 card 찾기
       const cardsInColumn = await this.findAll(columnId);
 
-      // 카드 배열 생성
+      //6-3.카드의 배열생성
       const cardArray = cardsInColumn.map((c) => ({ ...c }));
 
-      // 이동된 카드 찾기
+      //6-4.카드배열에서 이동시킬 카드 id로 찾기
       const movedCardIndex = cardArray.findIndex((c) => c.id === card.id);
 
       if (movedCardIndex !== -1) {
-        // 배열에서 이동된 카드 제거
+        //6-5.카드배열에서 이동시킬 카드 제거하기
         const movedCard = cardArray.splice(movedCardIndex, 1)[0];
 
-        // 새로운 위치에 카드 삽입
+        //6-6.splice 이용해서 newOrder로 이동시킬 위치에 카드 삽입
         cardArray.splice(newOrder - 1, 0, movedCard);
 
-        // 각 카드에 대해 순서 업데이트
+        //6-7.for문으로 order번호 1번부터 할당하기
         for (let i = 0; i < cardArray.length; i++) {
           await this.cardRepository.update(
             { id: cardArray[i].id },
