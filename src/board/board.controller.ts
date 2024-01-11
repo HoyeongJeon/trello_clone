@@ -167,8 +167,6 @@ export class BoardController {
       qr,
     );
 
-    // throw new Error('에러');
-
     return {
       statusCode: HttpStatus.OK,
       message: '보드 초대에 성공했습니다.',

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ColumnModel } from './entities/column.entity';
 import { CreateColumnDto } from './dtos/create-column.dto';
@@ -6,7 +6,9 @@ import { UpdateColumnDto } from './dtos/update-column.dto';
 import { UpdateOrderDto } from './dtos/order-column.dto';
 import { CardService } from 'src/card/card.service';
 import { QueryRunner, Repository } from 'typeorm';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Injectable()
 export class ColumnService {
   constructor(

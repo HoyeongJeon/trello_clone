@@ -37,7 +37,11 @@ async function bootstrap() {
       operationsSorter: 'alpha', // API 순서 알파벳 순으로 정렬
     },
   });
+  const option = {
+    host: '0.0.0.0',
+    port: SERVER_PORT,
+  };
 
-  await app.listen(SERVER_PORT);
+  await app.listen(option.port, option.host);
 }
 bootstrap();
